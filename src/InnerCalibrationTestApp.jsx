@@ -714,7 +714,7 @@ function Test({ answers, setAnswers, onSubmit }) {
 
   return (
     <main className="flex h-[calc(100svh-4.5rem)] w-full flex-col overflow-hidden px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
-      <div className="grid items-stretch gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_16rem_16rem]">
+      <div className="hidden items-stretch gap-2 md:grid md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_16rem_16rem]">
         <div className="flex min-h-[92px] flex-col justify-between rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4 md:col-span-2 xl:col-span-1">
           <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
             <span>第 {index + 1} / {questions.length} 题</span>
@@ -786,9 +786,9 @@ function Test({ answers, setAnswers, onSubmit }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
           transition={{ duration: 0.22 }}
-          className="mt-2 flex min-h-0 flex-1 flex-col rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/5 sm:p-4 lg:p-5"
+          className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/5 sm:p-4 lg:p-5"
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+          <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
@@ -813,7 +813,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
             </div>
 
-            <div className="grid flex-1 auto-rows-fr gap-2">
+            <div className="grid gap-2 md:flex-1 md:auto-rows-fr">
               {scale.map((item) => {
                 const selected = currentAnswer === item.value;
                 const choiceReading = getChoiceReading(current, item.value);
@@ -853,35 +853,88 @@ function Test({ answers, setAnswers, onSubmit }) {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-col-reverse gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              onClick={prev}
-              disabled={index === 0}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-            >
-              <Icon name="ArrowLeft" className="h-5 w-5" />
-              上一题
-            </button>
+          <div className="mt-3 shrink-0 border-t border-slate-200 pt-3">
+            <div className="mb-3 space-y-2 md:hidden">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
+                  <span>第 {index + 1} / {questions.length} 题</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <motion.div
+                    className="h-full rounded-full bg-slate-950"
+                    initial={false}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.25 }}
+                  />
+                </div>
+              </div>
 
-            {index < questions.length - 1 ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoAdvance}
+                  onClick={() => setAutoAdvance((value) => !value)}
+                  className={classNames(
+                    "flex h-11 items-center justify-between rounded-2xl border px-3 text-left text-xs font-semibold transition",
+                    autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700"
+                  )}
+                >
+                  <span>自动跳转</span>
+                  <span className={classNames("relative h-5 w-9 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
+                    <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-4" : "left-0.5")} />
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showChoiceReadings}
+                  onClick={() => setShowChoiceReadings((value) => !value)}
+                  className={classNames(
+                    "flex h-11 items-center justify-between rounded-2xl border px-3 text-left text-xs font-semibold transition",
+                    showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700"
+                  )}
+                >
+                  <span>选项解读</span>
+                  <span className={classNames("relative h-5 w-9 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
+                    <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-4" : "left-0.5")} />
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
               <button
-                onClick={next}
-                disabled={!currentAnswer}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                onClick={prev}
+                disabled={index === 0}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
-                下一题
-                <Icon name="ArrowRight" className="h-5 w-5" />
+                <Icon name="ArrowLeft" className="h-5 w-5" />
+                上一题
               </button>
-            ) : (
-              <button
-                onClick={onSubmit}
-                disabled={!canSubmit}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-              >
-                查看结果
-                <Icon name="Sparkles" className="h-5 w-5" />
-              </button>
-            )}
+
+              {index < questions.length - 1 ? (
+                <button
+                  onClick={next}
+                  disabled={!currentAnswer}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                >
+                  下一题
+                  <Icon name="ArrowRight" className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={onSubmit}
+                  disabled={!canSubmit}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                >
+                  查看结果
+                  <Icon name="Sparkles" className="h-5 w-5" />
+                </button>
+              )}
+            </div>
           </div>
         </motion.section>
       </AnimatePresence>
