@@ -803,13 +803,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               </p>
             </div>
 
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="text-sm font-semibold text-slate-950">请选择最接近你的反应</div>
-                <div className="text-sm text-slate-500">
-                  {showChoiceReadings ? "每个选项下面都会给一句白话说明" : "按第一反应选择就可以"}
-                </div>
-              </div>
+            <div className="flex justify-end">
               <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
             </div>
 
