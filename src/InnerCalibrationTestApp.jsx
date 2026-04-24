@@ -407,8 +407,33 @@ const questionPurposes = {
   40: "这题用来观察：你是否把成长看成持续练习，而不是一次考试。它测的是长期主义自我修正心态。",
 };
 
+function getQuestionHintParts(question) {
+  const fallback = "这题用来观察你在这个维度上的常见反应模式。请按第一直觉作答，不需要选择看起来更正确的答案。";
+  const raw = questionPurposes[question.id] || fallback;
+  const parts = raw
+    .split("。")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return {
+    summary: parts[0] ? `${parts[0]}。` : fallback,
+    detail: parts[1] ? `${parts.slice(1).join("，")}。` : "",
+  };
+}
+
 function getQuestionHint(question) {
-  return questionPurposes[question.id] || "这题用来观察你在这个维度上的常见反应模式。请按第一直觉作答，不需要选择看起来更正确的答案。";
+  return getQuestionHintParts(question).summary;
+}
+
+function getQuestionFocus(question) {
+  const { detail } = getQuestionHintParts(question);
+  if (!detail) return "";
+
+  return detail
+    .replace(/^它测的是/u, "")
+    .replace(/^更在看/u, "")
+    .replace(/。$/u, "")
+    .trim();
 }
 
 function getChoiceDirection(question, value) {
@@ -428,19 +453,22 @@ function getChoiceReading(question, value) {
   const reading = choiceReadings[question.axis];
   const direction = getChoiceDirection(question, value);
   const intensity = getChoiceIntensity(value);
+  const focus = getQuestionFocus(question);
 
   if (direction === "middle") {
     return {
       title: "情境型反应",
-      body: "你可能会因对象、状态或压力不同，而在两种反应之间摇摆。",
+      body: focus ? `你在这道题上的反应更看当下情境，暂时没有固定偏向 ${focus}。` : "你在这道题上的反应更看具体情境和当下状态。",
     };
   }
 
   const title = direction === "left" ? reading.leftTitle : reading.rightTitle;
   const body = direction === "left" ? reading.left : reading.right;
+  const stemCue = value > 3 ? "更接近题干里的反应" : "不太接近题干里的反应";
+
   return {
     title: `${intensity}${title}`,
-    body,
+    body: focus ? `这表示你${stemCue}，在这道题里更偏向 ${focus}。` : `${stemCue}。${body}`,
   };
 }
 
@@ -558,7 +586,7 @@ if (typeof window !== "undefined" && !window.__INNER_CALIBRATION_SELF_TESTED__) 
 function Header({ onReset, hasStarted }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <div className="flex w-full items-center justify-between px-3 py-3 sm:px-4 lg:px-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
             <Icon name="Sparkles" className="h-5 w-5" />
@@ -584,7 +612,7 @@ function Header({ onReset, hasStarted }) {
 
 function Home({ onStart }) {
   return (
-    <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
+    <main className="w-full px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
       <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
@@ -676,6 +704,9 @@ function Test({ answers, setAnswers, onSubmit }) {
   const progress = Math.round(((index + 1) / questions.length) * 100);
   const answeredCount = Object.keys(answers).length;
   const canSubmit = answeredCount === questions.length;
+  const currentHint = getQuestionHintParts(current);
+  const currentAxis = AXES[current.axis];
+  const currentAnswer = answers[current.id];
 
   const setAnswer = (value) => {
     setAnswers((prev) => ({ ...prev, [current.id]: value }));
@@ -696,65 +727,74 @@ function Test({ answers, setAnswers, onSubmit }) {
   };
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mb-8">
-        <div className="mb-3 flex items-center justify-between text-sm text-slate-500">
-          <span>第 {index + 1} / {questions.length} 题</span>
-          <span>{progress}%</span>
-        </div>
-        <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-          <motion.div
-            className="h-full rounded-full bg-slate-950"
-            initial={false}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.25 }}
-          />
-        </div>
-      </div>
-
-      <div className="mb-5 grid gap-3 md:grid-cols-2">
-        <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold text-slate-950">选择后自动跳转</div>
-            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，点选答案会自动进入下一题；关闭后，需要手动点击“下一题”。</div>
+    <main className="flex min-h-[calc(100svh-4.5rem)] w-full flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
+            <span>第 {index + 1} / {questions.length} 题</span>
+            <span>{progress}%</span>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={autoAdvance}
-            onClick={() => setAutoAdvance((value) => !value)}
-            className={classNames(
-              "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition sm:w-44",
-              autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
-            )}
-          >
-            <span>{autoAdvance ? "已开启" : "已关闭"}</span>
-            <span className={classNames("relative h-6 w-11 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
-              <span className={classNames("absolute top-1 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-6" : "left-1")} />
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+            <motion.div
+              className="h-full rounded-full bg-slate-950"
+              initial={false}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.25 }}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs sm:text-sm">
+            <span className="rounded-full bg-slate-950 px-3 py-1 font-medium text-white">{currentAxis.title}</span>
+            <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">已完成 {answeredCount} / {questions.length}</span>
+            <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">
+              {currentAxis.leftName} / {currentAxis.rightName}
             </span>
-          </button>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-semibold text-slate-950">显示选项解读</div>
-            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，每个选项都会直接显示对应补充说明，不再依赖悬浮提示。</div>
+        <div className="grid gap-2 sm:grid-cols-2 2xl:min-w-[440px]">
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="pr-3">
+              <div className="text-sm font-semibold text-slate-950">选择后自动跳转</div>
+              <div className="text-xs leading-5 text-slate-500">减少一次额外点击，适合快速答题。</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoAdvance}
+              onClick={() => setAutoAdvance((value) => !value)}
+              className={classNames(
+                "flex w-24 shrink-0 items-center justify-between rounded-full border px-3 py-2 text-xs font-semibold transition",
+                autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+              )}
+            >
+              <span>{autoAdvance ? "开启" : "关闭"}</span>
+              <span className={classNames("relative h-5 w-9 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
+                <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-4" : "left-0.5")} />
+              </span>
+            </button>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showChoiceReadings}
-            onClick={() => setShowChoiceReadings((value) => !value)}
-            className={classNames(
-              "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition sm:w-44",
-              showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
-            )}
-          >
-            <span>{showChoiceReadings ? "已显示" : "已隐藏"}</span>
-            <span className={classNames("relative h-6 w-11 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
-              <span className={classNames("absolute top-1 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-6" : "left-1")} />
-            </span>
-          </button>
+
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="pr-3">
+              <div className="text-sm font-semibold text-slate-950">显示选项解读</div>
+              <div className="text-xs leading-5 text-slate-500">用本题重点解释每个选项，不再依赖悬浮提示。</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showChoiceReadings}
+              onClick={() => setShowChoiceReadings((value) => !value)}
+              className={classNames(
+                "flex w-24 shrink-0 items-center justify-between rounded-full border px-3 py-2 text-xs font-semibold transition",
+                showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+              )}
+            >
+              <span>{showChoiceReadings ? "显示" : "隐藏"}</span>
+              <span className={classNames("relative h-5 w-9 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
+                <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-4" : "left-0.5")} />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -765,78 +805,94 @@ function Test({ answers, setAnswers, onSubmit }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
           transition={{ duration: 0.22 }}
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-10"
+          className="mt-3 flex min-h-0 flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/5 sm:p-5 lg:p-6"
         >
-          <div className="mb-5 inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
-            {AXES[current.axis].title}
-          </div>
-          <div className="grid gap-4 lg:grid-cols-[1fr_280px] lg:items-start">
-            <h2 className="text-2xl font-bold leading-snug tracking-tight text-slate-950 sm:text-3xl">
-              {current.text}
-            </h2>
-            <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-              <div className="mb-2 flex items-center gap-2 font-semibold text-slate-950">
-                <Icon name="Info" className="h-4 w-4" />
-                如何理解这道题
+          <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+            <div className="flex min-h-0 flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
               </div>
-              {getQuestionHint(current)}
-            </aside>
-          </div>
 
-          <div className={classNames("mt-8 grid gap-3", !showChoiceReadings && "md:grid-cols-2")}>
-            {scale.map((item) => {
-              const selected = answers[current.id] === item.value;
-              const choiceReading = getChoiceReading(current, item.value);
-              return (
-                <button
-                  key={item.value}
-                  onClick={() => setAnswer(item.value)}
-                  className={classNames(
-                    "group relative rounded-2xl border px-4 py-4 text-left transition sm:px-5",
-                    selected
-                      ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                  )}
-                >
-                  <div
-                    className={classNames(
-                      "grid gap-3",
-                      showChoiceReadings
-                        ? "md:grid-cols-[minmax(0,200px)_minmax(0,1fr)] md:items-start md:gap-4"
-                        : "grid-cols-[minmax(0,1fr)_auto] items-center"
-                    )}
-                  >
-                    <div className="flex min-w-0 items-center justify-between gap-4">
-                      <span className="min-w-0 font-semibold leading-6">{item.label}</span>
-                      <span
-                        className={classNames(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm",
-                          selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500"
-                        )}
-                      >
-                        {item.value}
-                      </span>
-                    </div>
-                    {showChoiceReadings && (
-                      <div
-                        className={classNames(
-                          "min-w-0 rounded-xl border px-3 py-3 text-sm leading-6",
-                          selected
-                            ? "border-white/20 bg-white/10 text-white/85"
-                            : "border-slate-200 bg-slate-50 text-slate-600"
-                        )}
-                      >
-                        <div className={classNames("mb-1 font-semibold", selected ? "text-white" : "text-slate-950")}>{choiceReading.title}</div>
-                        <div>{choiceReading.body}</div>
-                      </div>
-                    )}
+              <h2 className="text-[clamp(1.35rem,2.2vw,2.4rem)] font-bold leading-snug tracking-tight text-slate-950">
+                {current.text}
+              </h2>
+
+              <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
+                <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                  <div className="flex items-center gap-2 font-semibold text-slate-950">
+                    <Icon name="Info" className="h-4 w-4" />
+                    如何理解这道题
                   </div>
-                </button>
-              );
-            })}
+                  <p className="mt-2">{currentHint.summary}</p>
+                  {currentHint.detail && (
+                    <div className="mt-3 rounded-xl bg-white px-3 py-2 text-sm leading-6 text-slate-600 ring-1 ring-slate-200/80">
+                      <span className="font-semibold text-slate-950">这题更在看：</span>
+                      {currentHint.detail}
+                    </div>
+                  )}
+                </aside>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
+                  <div className="font-semibold text-slate-950">作答提示</div>
+                  <p className="mt-2">按第一反应选择即可，不必追求“更正确”的答案。选项会保持从上到下排列，电脑端和移动端都优先按整屏阅读来压缩布局。</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex min-h-0 flex-col">
+              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-slate-950">请选择最接近你的反应</div>
+                  <div className="text-sm text-slate-500">
+                    {showChoiceReadings ? "已开启针对本题的选项解读" : "保持纯选项模式，整屏阅读更紧凑"}
+                  </div>
+                </div>
+                <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
+              </div>
+
+              <div className="grid flex-1 auto-rows-fr gap-2.5">
+                {scale.map((item) => {
+                  const selected = currentAnswer === item.value;
+                  const choiceReading = getChoiceReading(current, item.value);
+
+                  return (
+                    <button
+                      key={item.value}
+                      onClick={() => setAnswer(item.value)}
+                      className={classNames(
+                        "group relative flex h-full flex-col justify-center rounded-2xl border px-4 py-3.5 text-left transition sm:px-5",
+                        selected
+                          ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={classNames(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                            selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500"
+                          )}
+                        >
+                          {item.value}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className={classNames("font-semibold leading-6", selected ? "text-white" : "text-slate-950")}>{item.label}</div>
+                          {showChoiceReadings && (
+                            <div className={classNames("mt-1 text-[13px] leading-5", selected ? "text-white/85" : "text-slate-500")}>
+                              {choiceReading.title}：{choiceReading.body}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={prev}
               disabled={index === 0}
@@ -849,7 +905,7 @@ function Test({ answers, setAnswers, onSubmit }) {
             {index < questions.length - 1 ? (
               <button
                 onClick={next}
-                disabled={!answers[current.id]}
+                disabled={!currentAnswer}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 下一题
@@ -868,10 +924,6 @@ function Test({ answers, setAnswers, onSubmit }) {
           </div>
         </motion.section>
       </AnimatePresence>
-
-      <div className="mt-5 text-center text-sm text-slate-500">
-        已完成 {answeredCount} / {questions.length} 题
-      </div>
     </main>
   );
 }
@@ -1008,7 +1060,7 @@ function Result({ answers, onReset }) {
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <main className="w-full px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -1142,9 +1194,11 @@ export default function InnerCalibrationTestApp() {
       {stage === "home" && <Home onStart={start} />}
       {stage === "test" && <Test answers={answers} setAnswers={setAnswers} onSubmit={submit} />}
       {stage === "result" && <Result answers={answers} onReset={reset} />}
-      <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-slate-500 sm:px-6">
-        © {new Date().getFullYear()} 内在校准测试 · 用于自我理解，不用于医学诊断
-      </footer>
+      {stage !== "test" && (
+        <footer className="w-full px-4 py-10 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
+          © {new Date().getFullYear()} 内在校准测试 · 用于自我理解，不用于医学诊断
+        </footer>
+      )}
     </div>
   );
 }
