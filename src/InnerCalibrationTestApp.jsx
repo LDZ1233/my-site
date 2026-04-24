@@ -337,33 +337,6 @@ const scale = [
   { value: 5, label: "非常同意" },
 ];
 
-const choiceReadings = {
-  perception: {
-    leftTitle: "偏向直觉解读",
-    left: "你可能会很快从语气、表情或细节中推断对方的态度。",
-    rightTitle: "偏向事实校准",
-    right: "你可能会先区分事实、感受和自己的解释，再下结论。",
-  },
-  feedback: {
-    leftTitle: "偏向在意负反馈",
-    left: "你可能会对批评、失败或否定记得更久，也更容易被它们影响。",
-    rightTitle: "偏向平衡反馈",
-    right: "你可能会把反馈看成具体信息，而不是对整个人的评价。",
-  },
-  action: {
-    leftTitle: "偏向先停下来",
-    left: "你可能会在压力或不确定中先拖延、回避、暂停或撤回。",
-    rightTitle: "偏向行动校准",
-    right: "你可能会通过一个小行动来确认现实、降低焦虑或恢复状态。",
-  },
-  self: {
-    leftTitle: "偏向自我审判",
-    left: "你可能会在反思时用较严厉的语言要求自己。",
-    rightTitle: "偏向温和修正",
-    right: "你可能会在承认问题的同时，尽量不否定自己这个人。",
-  },
-};
-
 const questionPurposes = {
   1: "这题用来观察：当外界反馈变得冷淡或模糊时，你是否会立刻把原因归到自己身上。它测的是关系信号中的自责倾向。",
   2: "这题用来观察：你能不能把客观事件和自己的解释分开。它测的是事实-解释分离能力。",
@@ -421,21 +394,6 @@ function getQuestionHintParts(question) {
   };
 }
 
-function getQuestionHint(question) {
-  return getQuestionHintParts(question).summary;
-}
-
-function getQuestionFocus(question) {
-  const { detail } = getQuestionHintParts(question);
-  if (!detail) return "";
-
-  return detail
-    .replace(/^它测的是/u, "")
-    .replace(/^更在看/u, "")
-    .replace(/。$/u, "")
-    .trim();
-}
-
 function getChoiceDirection(question, value) {
   if (value === 3) return "middle";
   const agrees = value > 3;
@@ -450,25 +408,52 @@ function getChoiceIntensity(value) {
 }
 
 function getChoiceReading(question, value) {
-  const reading = choiceReadings[question.axis];
   const direction = getChoiceDirection(question, value);
   const intensity = getChoiceIntensity(value);
-  const focus = getQuestionFocus(question);
+  const plainMessages = {
+    perception: {
+      left: "你更容易先按感觉下判断，证据通常会慢一步。",
+      right: "你更像会先分开事实和猜测，再决定这件事到底是什么意思。",
+      middle: "你会看当时情境来判断，不会总固定在一种理解方式里。",
+    },
+    feedback: {
+      left: "你更容易先被负面的那部分卡住，好的部分会先退到后面。",
+      right: "你更像能把反馈当成信息看，不会一下子就上升成否定自己。",
+      middle: "你会看当时的人和状态，收到反馈时不一定总往一个方向走。",
+    },
+    action: {
+      left: "你更容易先停一下或拖一下，想等自己更有把握再动。",
+      right: "你更像会先做一个小动作，让自己别一直卡在原地。",
+      middle: "你会看当时状态来决定，有时先缓一下，有时会先做一点。",
+    },
+    self: {
+      left: "你更容易先批评自己，理解自己通常会排在后面。",
+      right: "你更像会先理解自己，再慢慢调整，而不是一上来就责怪自己。",
+      middle: "你会在要求自己和体谅自己之间来回切换，看当下状态而定。",
+    },
+  };
+
+  const prefixMap = {
+    strong: "如果你选这个，通常说明",
+    light: "这个选择多半表示",
+    middle: "",
+  };
+
+  const tone = value === 1 || value === 5 ? "strong" : value === 3 ? "middle" : "light";
 
   if (direction === "middle") {
     return {
       title: "情境型反应",
-      body: focus ? `你在这道题上的反应更看当下情境，暂时没有固定偏向 ${focus}。` : "你在这道题上的反应更看具体情境和当下状态。",
+      body: plainMessages[question.axis].middle,
     };
   }
 
-  const title = direction === "left" ? reading.leftTitle : reading.rightTitle;
-  const body = direction === "left" ? reading.left : reading.right;
-  const stemCue = value > 3 ? "更接近题干里的反应" : "不太接近题干里的反应";
+  const message = plainMessages[question.axis][direction];
+  const prefix = prefixMap[tone];
 
   return {
-    title: `${intensity}${title}`,
-    body: focus ? `这表示你${stemCue}，在这道题里更偏向 ${focus}。` : `${stemCue}。${body}`,
+    title: intensity,
+    body: prefix ? `${prefix}${message}` : message,
   };
 }
 
@@ -807,88 +792,76 @@ function Test({ answers, setAnswers, onSubmit }) {
           transition={{ duration: 0.22 }}
           className="mt-3 flex min-h-0 flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/5 sm:p-5 lg:p-6"
         >
-          <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-            <div className="flex min-h-0 flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
-              </div>
-
-              <h2 className="text-[clamp(1.35rem,2.2vw,2.4rem)] font-bold leading-snug tracking-tight text-slate-950">
-                {current.text}
-              </h2>
-
-              <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
-                <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                  <div className="flex items-center gap-2 font-semibold text-slate-950">
-                    <Icon name="Info" className="h-4 w-4" />
-                    如何理解这道题
-                  </div>
-                  <p className="mt-2">{currentHint.summary}</p>
-                  {currentHint.detail && (
-                    <div className="mt-3 rounded-xl bg-white px-3 py-2 text-sm leading-6 text-slate-600 ring-1 ring-slate-200/80">
-                      <span className="font-semibold text-slate-950">这题更在看：</span>
-                      {currentHint.detail}
-                    </div>
-                  )}
-                </aside>
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
-                  <div className="font-semibold text-slate-950">作答提示</div>
-                  <p className="mt-2">按第一反应选择即可，不必追求“更正确”的答案。选项会保持从上到下排列，电脑端和移动端都优先按整屏阅读来压缩布局。</p>
-                </div>
-              </div>
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+              <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
             </div>
 
-            <div className="flex min-h-0 flex-col">
-              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-slate-950">请选择最接近你的反应</div>
-                  <div className="text-sm text-slate-500">
-                    {showChoiceReadings ? "已开启针对本题的选项解读" : "保持纯选项模式，整屏阅读更紧凑"}
-                  </div>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+              <div className="min-w-0">
+                <h2 className="text-[clamp(1.35rem,2.2vw,2.4rem)] font-bold leading-snug tracking-tight text-slate-950">
+                  {current.text}
+                </h2>
+              </div>
+
+              <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                <div className="flex items-center gap-2 font-semibold text-slate-950">
+                  <Icon name="Info" className="h-4 w-4" />
+                  如何理解这道题
                 </div>
-                <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
+                <p className="mt-2">{currentHint.summary}</p>
+                {currentHint.detail && <p className="mt-2 text-slate-500">{currentHint.detail}</p>}
+              </aside>
+            </div>
+
+            <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold text-slate-950">请选择最接近你的反应</div>
+                <div className="text-sm text-slate-500">
+                  {showChoiceReadings ? "每个选项下面都会给一句白话说明" : "按第一反应选择就可以"}
+                </div>
               </div>
+              <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
+            </div>
 
-              <div className="grid flex-1 auto-rows-fr gap-2.5">
-                {scale.map((item) => {
-                  const selected = currentAnswer === item.value;
-                  const choiceReading = getChoiceReading(current, item.value);
+            <div className="grid flex-1 auto-rows-fr gap-2.5">
+              {scale.map((item) => {
+                const selected = currentAnswer === item.value;
+                const choiceReading = getChoiceReading(current, item.value);
 
-                  return (
-                    <button
-                      key={item.value}
-                      onClick={() => setAnswer(item.value)}
-                      className={classNames(
-                        "group relative flex h-full flex-col justify-center rounded-2xl border px-4 py-3.5 text-left transition sm:px-5",
-                        selected
-                          ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span
-                          className={classNames(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-                            selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500"
-                          )}
-                        >
-                          {item.value}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className={classNames("font-semibold leading-6", selected ? "text-white" : "text-slate-950")}>{item.label}</div>
-                          {showChoiceReadings && (
-                            <div className={classNames("mt-1 text-[13px] leading-5", selected ? "text-white/85" : "text-slate-500")}>
-                              {choiceReading.title}：{choiceReading.body}
-                            </div>
-                          )}
-                        </div>
+                return (
+                  <button
+                    key={item.value}
+                    onClick={() => setAnswer(item.value)}
+                    className={classNames(
+                      "group relative flex h-full flex-col justify-center rounded-2xl border px-4 py-3.5 text-left transition sm:px-5",
+                      selected
+                        ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={classNames(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                          selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500"
+                        )}
+                      >
+                        {item.value}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className={classNames("font-semibold leading-6", selected ? "text-white" : "text-slate-950")}>{item.label}</div>
+                        {showChoiceReadings && (
+                          <div className={classNames("mt-1 text-[13px] leading-5", selected ? "text-white/85" : "text-slate-500")}>
+                            {choiceReading.body}
+                          </div>
+                        )}
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
