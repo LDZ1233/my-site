@@ -337,6 +337,132 @@ const scale = [
   { value: 5, label: "非常同意" },
 ];
 
+const resultSignalThemes = {
+  relationshipAlarm: {
+    title: "关系一冷，你会先怪自己",
+    painText: "当关系信号变冷、变模糊时，你心里很容易先冒出“是不是我哪里做错了”。",
+    comfortText: "这不代表你太脆弱，更像是你很在意关系，所以冷淡感会先扎到你。",
+    protectionText: "为了快点结束这种悬着的感觉，你会先脑补、先揽责，让自己像是先拿到了一个答案。",
+    reflection: "这一次我真的看到了证据，还是只是被冷淡感刺到后，先替对方下了结论？",
+    followUp: "如果我先不解释对方，只保留能被录像机拍到的事实，会剩下什么？",
+    step: "先写一句事实，再写一句我现在的猜测，把两者分开。",
+    resourceText: "你其实已经在慢慢练习，不让别人的反应直接定义你的价值。",
+  },
+  factBoundary: {
+    title: "情绪一上来，事实和想象会混在一起",
+    painText: "一旦情绪上来，你的大脑很容易把感受当成现实，脑内那版故事会跑得比证据更快。",
+    comfortText: "这不是你不理性，而是你的警觉系统太想尽快把空白补齐。",
+    protectionText: "你会用想象去填满不确定，好让自己早点知道“到底发生了什么”。",
+    reflection: "我现在最确定的，到底是事实，还是我脑子里那版解释？",
+    followUp: "如果把解释先拿掉，只留下真正发生过的事，我还会得出一样的结论吗？",
+    step: "把这件事拆成三句：事实是什么、我的解释是什么、另一种可能是什么。",
+    resourceText: "你已经有能力在不安里提醒自己：感受不等于事实。",
+  },
+  feedbackIdentity: {
+    title: "一被指出问题，就容易上升成否定自己",
+    painText: "当你出错、被批评，或做得不够好时，很容易很快滑到“是不是我这个人不行”。",
+    comfortText: "这常常不是你真的很差，而是你太想别再出错，所以会先用更重的话压自己。",
+    protectionText: "你会把标准提得更高、把话说得更重，想靠自我要求挡住下一次失望。",
+    reflection: "这次被指出的，是一件具体的事，还是我把它扩大成了对整个人的判决？",
+    followUp: "如果别人犯了同样的错，我也会这样否定他吗？",
+    step: "把“我不行”改写成“这次具体哪一步没做好，我下一次怎么调”。",
+    resourceText: "你也已经有一部分能力，能把错误当成信息，而不是当成对自己的判决。",
+  },
+  feedbackWeight: {
+    title: "负反馈会压过正反馈",
+    painText: "你的大脑更容易先记住否定、风险和做得不够的地方，好的部分会被挤到后面。",
+    comfortText: "这不是你故意忽视自己，而是你长期更习惯先盯住危险和失误。",
+    protectionText: "你会反复回想失误，试着靠更警惕来避免下一次再受伤。",
+    reflection: "我现在是不是只盯着最糟的一部分，漏掉了已经存在的正向证据？",
+    followUp: "如果要更公平地看这件事，支持我和不支持我的证据各有哪些？",
+    step: "补写 3 条没有那么糟的证据，把已经做到的也算进去。",
+    resourceText: "你并不是看不到好的部分，只是需要更主动地把这些证据留下来。",
+  },
+  shutdownAvoidance: {
+    title: "压力一上来，你更容易先停住",
+    painText: "一碰到压力、不确定或怕做不好的事，你更容易先停住、拖延，或者暂时躲开。",
+    comfortText: "这不是你懒，而是你的系统先在替你降压，想暂时避开失败和暴露感。",
+    protectionText: "先不动、先拖一下，会让你短暂轻松一点，但也会让卡住的感觉越积越重。",
+    reflection: "我现在是真的做不到，还是只是太想一次做好，所以不敢开始？",
+    followUp: "如果把任务缩成 5 分钟版本，我还会这么抗拒吗？",
+    step: "只做一个最小动作，不求完成，只求启动，比如打开文档、发一句话、列三行。",
+    resourceText: "你其实不是完全做不到，只是需要把任务缩小到现在接得住的尺寸。",
+  },
+  smallActionRepair: {
+    title: "把不安变成小动作，对你很关键",
+    painText: "当你没有把担心变成一个能验证的动作时，脑内推演会越来越大，现实感反而会更少。",
+    comfortText: "你不是不想解决，而是很怕一动就暴露、出错，或看见不想面对的答案。",
+    protectionText: "你会继续想、继续等，想先把一切想清楚，再决定要不要行动。",
+    reflection: "这件事如果不用等到完全想清楚，我现在能先验证什么？",
+    followUp: "有没有一个动作，能让我少猜一点、多看到一点现实？",
+    step: "先做一个 3 分钟动作：发一句消息、问一个问题、写一个标题、开一个文件。",
+    resourceText: "你已经具备把不安转成小动作的能力，这会是你很重要的修复入口。",
+  },
+  harshSelfTalk: {
+    title: "你对自己说话，常常太重了",
+    painText: "一出问题，你很容易先把刀口朝向自己，用很重的话来解释自己。",
+    comfortText: "这不是因为你不想爱自己，而是你太习惯把严厉当成推动自己的方法。",
+    protectionText: "你会先批评、先羞辱自己，想靠这种压力逼自己变好、别再犯错。",
+    reflection: "如果现在是我最在乎的人犯了同样的错，我也会这样对他说话吗？",
+    followUp: "我现在更需要的是继续骂自己，还是把问题说清楚？",
+    step: "把“我就是不行”改成“我卡在第几步、我下一步可以怎么做”。",
+    resourceText: "你已经开始知道，诚实地看见问题和羞辱自己，其实不是一回事。",
+  },
+  compassionateRepair: {
+    title: "你最难的，是在不完美里继续修正自己",
+    painText: "你并不是看不见自己的问题，真正难的是允许自己在没有立刻变好的情况下继续练习。",
+    comfortText: "这往往不是你不上进，而是你太怕反复，太想赶快证明自己已经变好了。",
+    protectionText: "你会用更高标准逼自己，想尽快结束这种不舒服和不确定。",
+    reflection: "我现在是在认真修正，还是因为受不了不完美，所以急着证明自己？",
+    followUp: "如果成长是练习，不是考试，我现在最该练的是哪一步？",
+    step: "只选一个调整点，不同时修所有地方，让改变留得住。",
+    resourceText: "你已经有一部分能力，能在要求自己时也给自己留空间。",
+  },
+};
+
+const questionThemeMap = {
+  1: "relationshipAlarm",
+  2: "factBoundary",
+  3: "relationshipAlarm",
+  4: "factBoundary",
+  5: "factBoundary",
+  6: "relationshipAlarm",
+  7: "factBoundary",
+  8: "relationshipAlarm",
+  9: "factBoundary",
+  10: "factBoundary",
+  11: "feedbackIdentity",
+  12: "feedbackWeight",
+  13: "feedbackIdentity",
+  14: "feedbackWeight",
+  15: "feedbackWeight",
+  16: "feedbackWeight",
+  17: "feedbackWeight",
+  18: "feedbackIdentity",
+  19: "feedbackWeight",
+  20: "feedbackIdentity",
+  21: "shutdownAvoidance",
+  22: "smallActionRepair",
+  23: "shutdownAvoidance",
+  24: "smallActionRepair",
+  25: "shutdownAvoidance",
+  26: "smallActionRepair",
+  27: "shutdownAvoidance",
+  28: "smallActionRepair",
+  29: "shutdownAvoidance",
+  30: "smallActionRepair",
+  31: "harshSelfTalk",
+  32: "compassionateRepair",
+  33: "harshSelfTalk",
+  34: "compassionateRepair",
+  35: "harshSelfTalk",
+  36: "compassionateRepair",
+  37: "harshSelfTalk",
+  38: "compassionateRepair",
+  39: "harshSelfTalk",
+  40: "compassionateRepair",
+};
+
 const questionPurposes = {
   1: "这题用来观察：当外界反馈变得冷淡或模糊时，你是否会立刻把原因归到自己身上。它测的是关系信号中的自责倾向。",
   2: "这题用来观察：你能不能把客观事件和自己的解释分开。它测的是事实-解释分离能力。",
@@ -493,6 +619,93 @@ function getAxisScores(answers) {
   return { raw, dimensions, code };
 }
 
+function getQuestionDisplayText(question) {
+  return question.example ? `${question.text} ${question.example}` : question.text;
+}
+
+function compareQuestionSignals(a, b) {
+  const distanceDiff = b.distance - a.distance;
+  if (distanceDiff !== 0) return distanceDiff;
+  return a.question.id - b.question.id;
+}
+
+function getResponseInsights(answers) {
+  const themeStats = Object.fromEntries(
+    Object.entries(resultSignalThemes).map(([key, meta]) => [
+      key,
+      {
+        key,
+        ...meta,
+        painScore: 0,
+        resourceScore: 0,
+        signals: [],
+      },
+    ])
+  );
+
+  const questionSignals = [];
+
+  questions.forEach((question) => {
+    const answer = Number(answers[question.id]);
+    if (!Number.isFinite(answer) || answer < 1 || answer > 5) return;
+
+    const themeKey = questionThemeMap[question.id];
+    if (!themeKey || !themeStats[themeKey]) return;
+
+    const signal = {
+      question,
+      answer,
+      answerLabel: scale.find((item) => item.value === answer)?.label || `${answer}`,
+      direction: getChoiceDirection(question, answer),
+      distance: Math.abs(answer - 3),
+      themeKey,
+      reading: getChoiceReading(question, answer),
+    };
+
+    questionSignals.push(signal);
+    themeStats[themeKey].signals.push(signal);
+
+    if (signal.direction === "left") themeStats[themeKey].painScore += signal.distance;
+    if (signal.direction === "right") themeStats[themeKey].resourceScore += signal.distance;
+  });
+
+  const topTriggers = Object.values(themeStats)
+    .map((theme) => ({
+      ...theme,
+      strongestSignal: [...theme.signals].filter((signal) => signal.direction === "left" && signal.distance > 0).sort(compareQuestionSignals)[0] || null,
+    }))
+    .filter((theme) => theme.painScore > 0 && theme.strongestSignal)
+    .sort((a, b) => {
+      const scoreDiff = b.painScore - a.painScore;
+      if (scoreDiff !== 0) return scoreDiff;
+      return compareQuestionSignals(a.strongestSignal, b.strongestSignal);
+    })
+    .slice(0, 2);
+
+  const topResources = Object.values(themeStats)
+    .map((theme) => ({
+      ...theme,
+      strongestSignal: [...theme.signals].filter((signal) => signal.direction === "right" && signal.distance > 0).sort(compareQuestionSignals)[0] || null,
+    }))
+    .filter((theme) => theme.resourceScore > 0 && theme.strongestSignal)
+    .sort((a, b) => {
+      const scoreDiff = b.resourceScore - a.resourceScore;
+      if (scoreDiff !== 0) return scoreDiff;
+      return compareQuestionSignals(a.strongestSignal, b.strongestSignal);
+    })
+    .slice(0, 2);
+
+  const dominantPain = [...questionSignals].filter((signal) => signal.direction === "left" && signal.distance > 0).sort(compareQuestionSignals)[0] || null;
+  const dominantResource = [...questionSignals].filter((signal) => signal.direction === "right" && signal.distance > 0).sort(compareQuestionSignals)[0] || null;
+
+  return {
+    topTriggers,
+    topResources,
+    dominantPain,
+    dominantResource,
+  };
+}
+
 function getAxisLabel(axis, value) {
   const meta = AXES[axis];
   return value >= 50 ? meta.rightName : meta.leftName;
@@ -542,6 +755,17 @@ function runSelfTests() {
     {
       name: "question purposes cover every question",
       custom: () => questions.every((question) => typeof questionPurposes[question.id] === "string" && questionPurposes[question.id].length > 0),
+    },
+    {
+      name: "question themes cover every question",
+      custom: () => questions.every((question) => typeof questionThemeMap[question.id] === "string" && Boolean(resultSignalThemes[questionThemeMap[question.id]])),
+    },
+    {
+      name: "response insights surface both triggers and resources",
+      custom: () => {
+        const insights = getResponseInsights(getAllAnswers(5));
+        return Array.isArray(insights.topTriggers) && Array.isArray(insights.topResources) && Boolean(insights.dominantPain) && Boolean(insights.dominantResource);
+      },
     },
   ];
 
@@ -1042,7 +1266,37 @@ function Radar({ dimensions }) {
 function Result({ answers, onReset }) {
   const [copied, setCopied] = useState(false);
   const { dimensions, code } = useMemo(() => getAxisScores(answers), [answers]);
+  const insights = useMemo(() => getResponseInsights(answers), [answers]);
   const result = resultTypes[code] || resultTypes.FBAC;
+  const topTrigger = insights.topTriggers[0] || null;
+  const secondaryTrigger = insights.topTriggers[1] || null;
+  const topResource = insights.topResources[0] || null;
+  const dominantSignal = insights.dominantPain || insights.dominantResource;
+  const innerStateParagraphs = [
+    topTrigger?.painText,
+    topTrigger?.comfortText,
+    topTrigger?.protectionText,
+    topResource?.resourceText,
+  ].filter(Boolean);
+  const reflectionPrompts = [...new Set([topTrigger?.reflection, topTrigger?.followUp, secondaryTrigger?.reflection])].filter(Boolean).slice(0, 3);
+  const nextStepCards = [
+    {
+      title: "先照顾自己",
+      body: topTrigger?.comfortText || "先别急着给自己下结论，能看见自己的反应，本身就是修复的起点。",
+    },
+    {
+      title: "先做一个小动作",
+      body: topTrigger?.step || result.practice,
+    },
+    {
+      title: "你已经有的底子",
+      body: topResource?.resourceText || "你的结果里并不只有卡点，你也有能慢慢把自己带回现实的部分。",
+    },
+  ];
+  const dominantSignalTitle = insights.dominantPain ? "最容易刺到你的那道题" : "你已经有的稳定点";
+  const dominantSignalNote = insights.dominantPain
+    ? "这不说明你一定有某段明确的创伤，更像是这类场景最容易刺到你，所以你的反应会更快、更重。"
+    : "这说明在这类场景里，你已经有一部分能力，可以先把自己稳住，而不是完全被当下拖走。";
 
   const shareText = `我的内在校准类型是「${result.name}」：${result.tagline}\n\n四维结果：${AXES.perception.title}-${getAxisLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisLabel("self", dimensions.self)}。`;
 
@@ -1112,8 +1366,50 @@ function Result({ answers, onReset }) {
           className="space-y-6"
         >
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-2xl font-bold text-slate-950">核心模式</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">{result.summary}</p>
+            <h2 className="text-2xl font-bold text-slate-950">更像你心里的状态</h2>
+            <div className="mt-4 space-y-3 text-lg leading-8 text-slate-600">
+              {innerStateParagraphs.length > 0 ? (
+                innerStateParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+              ) : (
+                <p>{result.summary}</p>
+              )}
+            </div>
+            <div className="mt-5 rounded-[1.5rem] bg-slate-50 p-5 text-base leading-7 text-slate-600">
+              {result.summary}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-950">最近最容易刺到你的点</h3>
+              <div className="mt-4 space-y-3">
+                {insights.topTriggers.length > 0 ? (
+                  insights.topTriggers.map((theme) => (
+                    <div key={theme.key} className="rounded-2xl bg-slate-50 p-4">
+                      <div className="font-semibold text-slate-950">{theme.title}</div>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">{theme.painText}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm leading-7 text-slate-500">你的回答相对均衡，没有某一个高强度触发点明显压过其他部分。</p>
+                )}
+              </div>
+            </div>
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-950">你已经有的修复能力</h3>
+              <div className="mt-4 space-y-3">
+                {insights.topResources.length > 0 ? (
+                  insights.topResources.map((theme) => (
+                    <div key={theme.key} className="rounded-2xl bg-slate-50 p-4">
+                      <div className="font-semibold text-slate-950">{theme.title}</div>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">{theme.resourceText}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm leading-7 text-slate-500">这次结果里，修复能力的信号还不够突出，后面的小练习会更适合你。</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -1149,9 +1445,67 @@ function Result({ answers, onReset }) {
         ))}
       </section>
 
+      <section className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+            <Icon name={insights.dominantPain ? "Info" : "ShieldCheck"} className="h-4 w-4" />
+            {dominantSignalTitle}
+          </div>
+          {dominantSignal ? (
+            <>
+              <h2 className="mt-4 text-2xl font-bold leading-snug text-slate-950">
+                {getQuestionDisplayText(dominantSignal.question)}
+              </h2>
+              <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+                你的选择：{dominantSignal.answerLabel}
+              </div>
+              <p className="mt-5 text-lg leading-8 text-slate-600">{dominantSignal.reading.body}</p>
+              <div className="mt-5 rounded-[1.5rem] bg-slate-50 p-5 text-sm leading-7 text-slate-600">
+                {dominantSignalNote}
+              </div>
+            </>
+          ) : (
+            <p className="mt-4 text-lg leading-8 text-slate-600">这次你的回答比较居中，所以没有出现一眼就很突出的高强度题目。</p>
+          )}
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="text-2xl font-bold text-slate-950">先问自己的问题</h2>
+          <div className="mt-4 space-y-3">
+            {reflectionPrompts.length > 0 ? (
+              reflectionPrompts.map((prompt, index) => (
+                <div key={prompt} className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+                  <div className="font-semibold text-slate-950">问题 {index + 1}</div>
+                  <div className="mt-1">{prompt}</div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+                你现在更需要的，可能不是继续分析，而是先允许自己慢一点、具体一点地看这件事。
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">你常见的保护方式</div>
+            <p className="mt-3 text-base leading-7 text-slate-700">
+              {topTrigger?.protectionText || "当我们不舒服时，总会有一些自动保护动作。先看见它们，比立刻改掉它们更重要。"}
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-2xl font-bold text-slate-950">你的校准练习</h2>
+        <h2 className="text-2xl font-bold text-slate-950">更适合你的校准建议</h2>
         <p className="mt-4 text-lg leading-8 text-slate-600">{result.practice}</p>
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          {nextStepCards.map((card) => (
+            <div key={card.title} className="rounded-3xl bg-slate-50 p-5">
+              <div className="text-sm font-semibold text-slate-500">{card.title}</div>
+              <p className="mt-3 leading-7 text-slate-700">{card.body}</p>
+            </div>
+          ))}
+        </div>
         <div className="mt-6 rounded-3xl bg-slate-50 p-5">
           <div className="text-sm font-semibold text-slate-500">通用练习模板</div>
           <div className="mt-4 grid gap-3 text-slate-700 md:grid-cols-2">
