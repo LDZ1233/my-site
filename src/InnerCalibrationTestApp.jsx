@@ -1,0 +1,1134 @@
+import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+function safeClassName(value, fallback = "h-5 w-5") {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function Icon({ name, className = "h-5 w-5" }) {
+  const svgClassName = safeClassName(className);
+  const common = {
+    className: svgClassName,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true,
+  };
+
+  const icons = {
+    ArrowRight: (
+      <svg {...common}>
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </svg>
+    ),
+    ArrowLeft: (
+      <svg {...common}>
+        <path d="M19 12H5" />
+        <path d="m12 19-7-7 7-7" />
+      </svg>
+    ),
+    RotateCcw: (
+      <svg {...common}>
+        <path d="M3 12a9 9 0 1 0 3-6.7" />
+        <path d="M3 3v6h6" />
+      </svg>
+    ),
+    Share2: (
+      <svg {...common}>
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <path d="m8.6 13.5 6.8 4" />
+        <path d="m15.4 6.5-6.8 4" />
+      </svg>
+    ),
+    Sparkles: (
+      <svg {...common}>
+        <path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" />
+        <path d="M19 15v4" />
+        <path d="M21 17h-4" />
+        <path d="M5 3v4" />
+        <path d="M7 5H3" />
+      </svg>
+    ),
+    ShieldCheck: (
+      <svg {...common}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+        <path d="m9 12 2 2 4-5" />
+      </svg>
+    ),
+    Brain: (
+      <svg {...common}>
+        <path d="M8 6.5A3 3 0 0 1 11 3a3 3 0 0 1 3 3" />
+        <path d="M14 6a3 3 0 0 1 3 3 3 3 0 0 1-1 2.2" />
+        <path d="M8 6.5A3.5 3.5 0 0 0 5 10a3.5 3.5 0 0 0 1.2 2.6" />
+        <path d="M6.2 12.6A4 4 0 0 0 9 20h1" />
+        <path d="M15.8 12.6A4 4 0 0 1 13 20h-1" />
+        <path d="M12 6v14" />
+      </svg>
+    ),
+    Heart: (
+      <svg {...common}>
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
+      </svg>
+    ),
+    Activity: (
+      <svg {...common}>
+        <path d="M22 12h-4l-3 8-6-16-3 8H2" />
+      </svg>
+    ),
+    Eye: (
+      <svg {...common}>
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    Copy: (
+      <svg {...common}>
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
+    ),
+    Check: (
+      <svg {...common}>
+        <path d="m20 6-11 11-5-5" />
+      </svg>
+    ),
+    Info: (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </svg>
+    ),
+  };
+
+  return icons[name] || icons.Sparkles;
+}
+
+const AXES = {
+  perception: {
+    left: "S",
+    right: "F",
+    leftName: "故事导向",
+    rightName: "事实导向",
+    title: "事实感知",
+    description: "你更容易相信第一反应，还是能区分事实与解释。",
+  },
+  feedback: {
+    left: "N",
+    right: "B",
+    leftName: "负反馈放大",
+    rightName: "平衡反馈",
+    title: "反馈权重",
+    description: "你会不会让一句否定盖过许多肯定。",
+  },
+  action: {
+    left: "W",
+    right: "A",
+    leftName: "回避冻结",
+    rightName: "行动校准",
+    title: "行动反应",
+    description: "情绪来临时，你更倾向停住，还是做一个小行动。",
+  },
+  self: {
+    left: "J",
+    right: "C",
+    leftName: "审判修正",
+    rightName: "慈悲修正",
+    title: "自我态度",
+    description: "你反思自己时，是更容易审判自己，还是理解中修正。",
+  },
+};
+
+const questions = [
+  { id: 1, axis: "perception", reverse: false, text: "当别人语气冷淡时，我会立刻觉得自己哪里做错了。" },
+  { id: 2, axis: "perception", reverse: true, text: "我能把“发生了什么”和“我以为它意味着什么”分开。" },
+  { id: 3, axis: "perception", reverse: false, text: "我经常在证据不足时，就判断别人对我的态度。" },
+  { id: 4, axis: "perception", reverse: false, text: "情绪强烈时，我很难分清现实和自己的想象。" },
+  { id: 5, axis: "perception", reverse: true, text: "我会主动寻找其他解释，而不是只相信第一反应。" },
+  { id: 6, axis: "perception", reverse: false, text: "一个模糊的表情或停顿，会让我忍不住反复琢磨。" },
+  { id: 7, axis: "perception", reverse: true, text: "在下结论前，我通常会先问：我有什么证据？" },
+  { id: 8, axis: "perception", reverse: false, text: "我容易把小细节串成一个对自己不利的故事。" },
+  { id: 9, axis: "perception", reverse: true, text: "即使我很不安，也能提醒自己：感受不等于事实。" },
+  { id: 10, axis: "perception", reverse: false, text: "我常常事后发现，自己一开始把事情想得太严重了。" },
+
+  { id: 11, axis: "feedback", reverse: false, text: "一次失败会让我否定自己很久。" },
+  { id: 12, axis: "feedback", reverse: false, text: "别人的肯定对我影响不大，但批评会影响很久。" },
+  { id: 13, axis: "feedback", reverse: true, text: "我能把一次批评看作局部反馈，而不是整体否定。" },
+  { id: 14, axis: "feedback", reverse: false, text: "当事情出错时，我会自动放大后果。" },
+  { id: 15, axis: "feedback", reverse: false, text: "我容易忽略自己已经做得不错的地方。" },
+  { id: 16, axis: "feedback", reverse: true, text: "我能同时接收正面评价和负面建议。" },
+  { id: 17, axis: "feedback", reverse: false, text: "只要有人不认可我，我就很难记住那些认可我的人。" },
+  { id: 18, axis: "feedback", reverse: true, text: "我能把错误当成信息，而不是判决。" },
+  { id: 19, axis: "feedback", reverse: false, text: "我会反复回想自己说错的话或做错的事。" },
+  { id: 20, axis: "feedback", reverse: true, text: "我相信一个人的价值不应该由一次表现决定。" },
+
+  { id: 21, axis: "action", reverse: false, text: "情绪低落时，我会完全停下来，什么都不想做。" },
+  { id: 22, axis: "action", reverse: true, text: "即使没有动力，我也能做一个很小的行动。" },
+  { id: 23, axis: "action", reverse: false, text: "我经常因为害怕做不好而迟迟不开始。" },
+  { id: 24, axis: "action", reverse: true, text: "我会通过具体行动来验证自己的担心是否真实。" },
+  { id: 25, axis: "action", reverse: false, text: "遇到不确定性时，我倾向于先逃避。" },
+  { id: 26, axis: "action", reverse: true, text: "当我被触发时，我可以先暂停，再选择一个较稳妥的回应。" },
+  { id: 27, axis: "action", reverse: false, text: "压力一大，我就容易拖延、断联或躲起来。" },
+  { id: 28, axis: "action", reverse: true, text: "我知道如何把大问题拆成下一步小行动。" },
+  { id: 29, axis: "action", reverse: false, text: "我常常等到状态完美了才愿意开始。" },
+  { id: 30, axis: "action", reverse: true, text: "我能允许自己带着不确定感继续行动。" },
+
+  { id: 31, axis: "self", reverse: false, text: "我反思自己时，经常变成攻击自己。" },
+  { id: 32, axis: "self", reverse: true, text: "我能承认自己的问题，同时不否定自己这个人。" },
+  { id: 33, axis: "self", reverse: false, text: "我会把错误理解成“我这个人不行”。" },
+  { id: 34, axis: "self", reverse: true, text: "我允许自己有反复，而不是要求一次变好。" },
+  { id: 35, axis: "self", reverse: false, text: "我越想改变自己，越容易对自己失望。" },
+  { id: 36, axis: "self", reverse: true, text: "我能用温和但诚实的方式看待自己的问题。" },
+  { id: 37, axis: "self", reverse: false, text: "一旦发现自己有缺点，我会觉得很羞耻。" },
+  { id: 38, axis: "self", reverse: true, text: "我相信理解自己和要求自己可以同时存在。" },
+  { id: 39, axis: "self", reverse: false, text: "我常常用很苛刻的语言和自己说话。" },
+  { id: 40, axis: "self", reverse: true, text: "我能把成长看成练习，而不是考试。" },
+];
+
+const resultTypes = {
+  SNWJ: {
+    name: "内耗叙事者",
+    tagline: "你不是没有觉察力，而是觉察力太快进入了自我审判模式。",
+    summary: "你对模糊信号很敏感，容易迅速生成负面解释，并把一次反馈扩大成对自我的整体评价。真正消耗你的，往往不是事件本身，而是事件之后不断叠加的故事、自责和停滞。",
+    strengths: ["感受力细腻，能捕捉到细微信号", "有强烈的反思能力", "很在意关系与责任"],
+    blindspots: ["容易把第一反应当作事实", "容易用自责获得短暂的控制感", "情绪越强，行动越容易冻结"],
+    practice: "事实-解释分离法：写下事实、我的解释、另一种可能。目标不是强迫自己乐观，而是让大脑多一个选择。",
+  },
+  SNWC: {
+    name: "敏感守望者",
+    tagline: "你很会感受，也愿意理解自己，但仍容易被负面线索牵动。",
+    summary: "你通常不是苛刻的人，甚至很想温柔地对待自己。但当关系、评价或失败出现模糊信号时，你的大脑会快速进入警觉状态，放大负反馈并推迟行动。",
+    strengths: ["有同理心", "愿意理解自己的来处", "对风险和关系变化敏锐"],
+    blindspots: ["容易在行动前消耗太多心理能量", "容易把不确定当成危险", "对负反馈的权重偏高"],
+    practice: "三分钟小行动：当你想逃避时，只做一件小到不能再小的事，比如打开文档、发一句确认、走出房间。",
+  },
+  SNAJ: {
+    name: "高压突围者",
+    tagline: "你会行动，但常常是用压力和自责把自己往前推。",
+    summary: "你不容易完全停下，甚至能在焦虑、自责和不安中继续推进。但你的行动常常来自紧绷，而不是稳定。你可能一边做事，一边在心里不断审判自己。",
+    strengths: ["行动力强", "不轻易放弃", "能把压力转化为推进力"],
+    blindspots: ["容易过度消耗", "容易把行动变成自我惩罚", "对模糊反馈过度解释"],
+    practice: "行动前加一句温和指令：我现在不是为了证明自己没问题，而是为了完成下一步。",
+  },
+  SNAC: {
+    name: "焦虑行动者",
+    tagline: "你会被信号牵动，但也能通过行动慢慢找回现实感。",
+    summary: "你容易对负面信息敏感，也容易先往坏处想；但你并不会一直停在原地。你最有效的修复方式，通常不是继续分析，而是做一点可验证的小行动。",
+    strengths: ["行动恢复能力不错", "愿意尝试修正", "能在不安中继续前进"],
+    blindspots: ["行动前容易脑补过多", "容易把别人的反应解读为评价", "可能忽视自己的正向证据"],
+    practice: "证据回收练习：每天记录 3 个“事情没有我想得那么糟”的证据，训练大脑重新估计风险。",
+  },
+  SBWJ: {
+    name: "迟疑审判者",
+    tagline: "你能接收一部分现实反馈，却容易在行动和自我评价上卡住。",
+    summary: "你并不总是放大负反馈，也能看到事情的多面性。但当需要开始、表达或冒险时，你可能因为害怕做不好而停住，并用自我批评解释这种停滞。",
+    strengths: ["相对能接收多元反馈", "做事前会思考后果", "有责任心"],
+    blindspots: ["容易把迟疑解释成无能", "常常等待状态变好", "自我要求偏硬"],
+    practice: "低标准启动法：把任务缩小到 5 分钟内能完成的版本，并允许第一版很粗糙。",
+  },
+  SBWC: {
+    name: "温和延迟者",
+    tagline: "你对自己并不残酷，但容易在不确定中慢慢停住。",
+    summary: "你通常能比较温和地看待自己，也不是特别容易被单一负反馈击垮。但当任务复杂、关系模糊或风险不明时，你容易延迟行动，让问题悬在心里。",
+    strengths: ["自我态度较温和", "不容易极端化自己", "能照顾他人的感受"],
+    blindspots: ["容易拖延重要但不紧急的事", "容易用等待代替选择", "可能低估小行动的力量"],
+    practice: "下一步清单：任何问题只写下一步，不写完整计划。比如“预约”“发一句话”“整理三行”。",
+  },
+  SBAJ: {
+    name: "高压推进者",
+    tagline: "你能行动，也能接收反馈，但常常用苛责维持效率。",
+    summary: "你有不错的执行力，也能从反馈中修正自己。但你的内在驱动力可能过于严苛：一旦不够好，你会立刻进入自我审判。你不是不强，而是太少给自己恢复空间。",
+    strengths: ["执行力强", "反馈吸收能力不错", "目标感清晰"],
+    blindspots: ["容易把休息看成退步", "容易把失误和价值绑定", "长期容易过载"],
+    practice: "复盘三分法：每次复盘必须写“做得好的、要调整的、下一步”，缺一不可。",
+  },
+  SBAC: {
+    name: "稳步修正者",
+    tagline: "你有行动力，也能较平衡地对待自己，是很适合持续成长的类型。",
+    summary: "你能在反馈中学习，不太容易被单一评价击垮，也能用相对温和的方式修正自己。你的成长关键不是更用力，而是更持续、更诚实地观察。",
+    strengths: ["稳定", "能行动", "自我修复能力较好"],
+    blindspots: ["可能偶尔忽略深层情绪", "容易太快进入解决问题模式", "需要保留感受空间"],
+    practice: "行动后感受记录：完成事情后，写一句“我真正感受到的是……”，避免只优化效率。",
+  },
+  FNWJ: {
+    name: "清醒困守者",
+    tagline: "你看得很清楚，却容易被负反馈和自我审判困住。",
+    summary: "你有较好的事实感，知道很多担心不一定等于现实。但负反馈仍然会重重压在你身上，使你在行动前反复评估、怀疑和责备自己。",
+    strengths: ["现实检验能力不错", "能区分事实和想法", "对问题有洞察"],
+    blindspots: ["知道不等于做到", "负反馈仍然容易压倒正反馈", "容易用理性包装自责"],
+    practice: "从理解到动作：每次想明白后，必须接一个 10 分钟内的小动作，让洞察落地。",
+  },
+  FNWC: {
+    name: "敏感观察者",
+    tagline: "你能分清事实，但仍会被负反馈拉住脚步。",
+    summary: "你不是容易乱想的人，通常能意识到自己的解释不一定是真的。但你对失败、否定和风险的权重较高，因此容易在行动上变慢。",
+    strengths: ["观察准确", "自我理解能力强", "温和且谨慎"],
+    blindspots: ["过度谨慎", "正反馈利用率不足", "可能高估失败成本"],
+    practice: "正反馈存档：专门保存别人认可你、事情顺利、你完成了某事的证据，用来平衡大脑的负面偏向。",
+  },
+  FNAJ: {
+    name: "理性冲锋者",
+    tagline: "你能看清现实，也愿意行动，但容易带着自我压力冲锋。",
+    summary: "你具备现实感和行动力，遇到问题会推进解决。但你对负面结果非常敏感，可能因此把自己推得太紧，用不断行动来避免失败感。",
+    strengths: ["现实感强", "行动力强", "抗压推进能力好"],
+    blindspots: ["容易紧绷", "可能用忙碌逃避脆弱", "自我语言偏苛刻"],
+    practice: "行动降压句：这只是一次尝试，不是对我价值的最终评定。",
+  },
+  FNAC: {
+    name: "现实修复者",
+    tagline: "你能看清事实，也能带着敏感继续行动。",
+    summary: "你对负反馈仍然敏感，但不太容易完全被它吞没。你能回到事实，也能用行动修复状态。你需要练习的，是让正反馈真正进入你的系统。",
+    strengths: ["清醒", "能修复", "愿意成长"],
+    blindspots: ["可能低估自己的稳定性", "容易轻描淡写自己的进步", "对负面信号仍偏敏感"],
+    practice: "进步量化法：不要只记录问题，也记录今天比昨天多做了什么、少逃避了什么。",
+  },
+  FBWJ: {
+    name: "理性迟行者",
+    tagline: "你判断相对清醒，却容易因为自我要求而迟迟不动。",
+    summary: "你能较客观地看待反馈，不会轻易被负面信息击穿。但当任务涉及评价、暴露或不确定结果时，你可能因为想做好而启动困难，并对这种困难感到自责。",
+    strengths: ["判断稳", "反馈吸收平衡", "做事有标准"],
+    blindspots: ["完美主义式拖延", "把开始看得太重", "容易责备自己的慢"],
+    practice: "粗糙第一版：任何重要事情先做 60 分版本，不追求一次到位。",
+  },
+  FBWC: {
+    name: "温和分析者",
+    tagline: "你很清醒，也不太苛责自己，但行动启动需要更多结构。",
+    summary: "你能分清事实和解释，也能较平衡地看待反馈。你的主要挑战可能不是内耗，而是把理解转成行动。你需要外部结构、节奏和小目标。",
+    strengths: ["清醒", "温和", "能接收多方信息"],
+    blindspots: ["容易停在分析", "行动节奏不够稳定", "可能缺少外部约束"],
+    practice: "结构化承诺：给下一步行动设置时间、地点、最小标准和一个可见记录。",
+  },
+  FBAJ: {
+    name: "纪律校准者",
+    tagline: "你能看清事实、吸收反馈并行动，但需要减少内在审判。",
+    summary: "你有很强的自我管理能力，也能从反馈中学习。你的风险是把成长变成考试，把修正变成自责。你需要的不是更努力，而是更可持续。",
+    strengths: ["自律", "执行力强", "现实感好"],
+    blindspots: ["容易过度要求", "不太允许脆弱", "可能把价值绑定表现"],
+    practice: "可持续复盘：每次调整只选一个重点，不同时修正所有问题。",
+  },
+  FBAC: {
+    name: "清醒校准者",
+    tagline: "你能从经验中学习，也能用相对稳定的方式修正自己。",
+    summary: "你比较能区分事实和解释，也能平衡正负反馈。情绪出现时，你通常能做一个小行动，而不是完全被拖走。你的成长方向是保持开放，而不是追求完美稳定。",
+    strengths: ["现实感强", "行动稳定", "自我态度成熟"],
+    blindspots: ["可能对自己的成熟有压力", "偶尔会忽略休息和感受", "需要避免把自己变成工具"],
+    practice: "开放式成长：每周问自己一次，我最近不是要改掉什么，而是想更理解什么？",
+  },
+};
+
+const axisIcons = {
+  perception: "Eye",
+  feedback: "Brain",
+  action: "Activity",
+  self: "Heart",
+};
+
+const scale = [
+  { value: 1, label: "非常不同意" },
+  { value: 2, label: "比较不同意" },
+  { value: 3, label: "不确定" },
+  { value: 4, label: "比较同意" },
+  { value: 5, label: "非常同意" },
+];
+
+const choiceReadings = {
+  perception: {
+    leftTitle: "偏向直觉解读",
+    left: "你可能会很快从语气、表情或细节中推断对方的态度。",
+    rightTitle: "偏向事实校准",
+    right: "你可能会先区分事实、感受和自己的解释，再下结论。",
+  },
+  feedback: {
+    leftTitle: "偏向在意负反馈",
+    left: "你可能会对批评、失败或否定记得更久，也更容易被它们影响。",
+    rightTitle: "偏向平衡反馈",
+    right: "你可能会把反馈看成具体信息，而不是对整个人的评价。",
+  },
+  action: {
+    leftTitle: "偏向先停下来",
+    left: "你可能会在压力或不确定中先拖延、回避、暂停或撤回。",
+    rightTitle: "偏向行动校准",
+    right: "你可能会通过一个小行动来确认现实、降低焦虑或恢复状态。",
+  },
+  self: {
+    leftTitle: "偏向自我审判",
+    left: "你可能会在反思时用较严厉的语言要求自己。",
+    rightTitle: "偏向温和修正",
+    right: "你可能会在承认问题的同时，尽量不否定自己这个人。",
+  },
+};
+
+const questionPurposes = {
+  1: "这题用来观察：当外界反馈变得冷淡或模糊时，你是否会立刻把原因归到自己身上。它测的是关系信号中的自责倾向。",
+  2: "这题用来观察：你能不能把客观事件和自己的解释分开。它测的是事实-解释分离能力。",
+  3: "这题用来观察：在证据不足时，你是否会提前判断他人的态度。它测的是模糊关系中的推断速度。",
+  4: "这题用来观察：情绪强烈时，你是否仍能保留现实检验能力。它测的是情绪与事实之间的边界感。",
+  5: "这题用来观察：你是否能主动给一件事寻找第二种解释。它测的是认知弹性和解释校准能力。",
+  6: "这题用来观察：你对表情、停顿、语气等微弱信号有多敏感。它测的是细节捕捉与反复琢磨倾向。",
+  7: "这题用来观察：你在下结论前是否会主动检查证据。它测的是推理前的暂停能力。",
+  8: "这题用来观察：你是否容易把零散细节连成一个对自己不利的故事。它测的是负向叙事生成倾向。",
+  9: "这题用来观察：即使感到不安，你是否能提醒自己感受并不等于事实。它测的是情绪去融合能力。",
+  10: "这题用来观察：你事后是否常发现自己高估了事情的严重性。它测的是灾难化解释倾向。",
+  11: "这题用来观察：一次失败会不会长时间影响你的整体自我评价。它测的是失败后的自我否定强度。",
+  12: "这题用来观察：你的大脑是否更容易保留批评，而不是肯定。它测的是正负反馈权重是否失衡。",
+  13: "这题用来观察：你能否把批评限制在具体事情上，而不是扩大成对整个人的否定。它测的是反馈边界感。",
+  14: "这题用来观察：事情出错时，你是否会自动放大后果。它测的是负面结果的放大倾向。",
+  15: "这题用来观察：你是否会忽略已经做得不错的部分。它测的是正向证据吸收能力。",
+  16: "这题用来观察：你是否能同时接住认可和建议。它测的是综合反馈的能力，而不是只听见其中一端。",
+  17: "这题用来观察：一个人的不认可是否会盖过其他人的认可。它测的是少数负面评价的支配力。",
+  18: "这题用来观察：你能否把错误当成信息，而不是价值判决。它测的是学习型反馈心态。",
+  19: "这题用来观察：你是否会反复回放失误细节。它测的是事后反刍倾向。",
+  20: "这题用来观察：你是否能把一次表现和自我价值分开。它测的是稳定自我价值感。",
+  21: "这题用来观察：情绪低落时，你的行动系统会不会进入停摆。它测的是低情绪下的冻结倾向。",
+  22: "这题用来观察：没有动力时，你是否仍能启动一个很小的动作。它测的是低能量行动能力。",
+  23: "这题用来观察：害怕做不好是否会让你迟迟不开始。它测的是失败预期导致的启动困难。",
+  24: "这题用来观察：你是否会用行动来验证担心，而不是只在脑中推演。它测的是行为实验能力。",
+  25: "这题用来观察：遇到不确定性时，你是否会先退开。它测的是不确定情境下的回避倾向。",
+  26: "这题用来观察：被触发时，你能否在反应前插入一个暂停。它测的是冲动与选择之间的缓冲能力。",
+  27: "这题用来观察：压力升高时，你是否会拖延、断联或躲起来。它测的是压力下的撤退模式。",
+  28: "这题用来观察：你能否把复杂问题拆成下一步。它测的是把焦虑转成行动结构的能力。",
+  29: "这题用来观察：你是否需要状态足够好才愿意开始。它测的是完美状态依赖。",
+  30: "这题用来观察：你能否带着不确定继续做事。它测的是不确定耐受与行动稳定性。",
+  31: "这题用来观察：你的反思是否容易变成自我攻击。它测的是自我审视中的攻击性语言。",
+  32: "这题用来观察：你能否承认问题，同时不否定整个人。它测的是自我接纳与修正能否并存。",
+  33: "这题用来观察：你是否会把错误上升为人格判断。它测的是错误与身份绑定的程度。",
+  34: "这题用来观察：你是否允许自己有反复。它测的是成长过程中的耐心与容错。",
+  35: "这题用来观察：想改变自己时，你是否反而更容易对自己失望。它测的是改变压力下的自我挫败。",
+  36: "这题用来观察：你能否既诚实又温和地看见自己的问题。它测的是非羞辱式反思能力。",
+  37: "这题用来观察：发现缺点时，你是否会迅速进入羞耻感。它测的是缺点暴露后的自我价值波动。",
+  38: "这题用来观察：你是否相信理解自己和要求自己可以同时存在。它测的是慈悲与责任的整合能力。",
+  39: "这题用来观察：你平时和自己说话是否苛刻。它测的是内在语言的严厉程度。",
+  40: "这题用来观察：你是否把成长看成持续练习，而不是一次考试。它测的是长期主义自我修正心态。",
+};
+
+function getQuestionHint(question) {
+  return questionPurposes[question.id] || "这题用来观察你在这个维度上的常见反应模式。请按第一直觉作答，不需要选择看起来更正确的答案。";
+}
+
+function getChoiceDirection(question, value) {
+  if (value === 3) return "middle";
+  const agrees = value > 3;
+  const pointsRight = question.reverse ? agrees : !agrees;
+  return pointsRight ? "right" : "left";
+}
+
+function getChoiceIntensity(value) {
+  if (value === 1 || value === 5) return "强烈";
+  if (value === 2 || value === 4) return "轻度";
+  return "情境型";
+}
+
+function getChoiceReading(question, value) {
+  const reading = choiceReadings[question.axis];
+  const direction = getChoiceDirection(question, value);
+  const intensity = getChoiceIntensity(value);
+
+  if (direction === "middle") {
+    return {
+      title: "情境型反应",
+      body: "你可能会因对象、状态或压力不同，而在两种反应之间摇摆。",
+    };
+  }
+
+  const title = direction === "left" ? reading.leftTitle : reading.rightTitle;
+  const body = direction === "left" ? reading.left : reading.right;
+  return {
+    title: `${intensity}${title}`,
+    body,
+  };
+}
+
+function classNames(...items) {
+  return items.filter(Boolean).join(" ");
+}
+
+function getAxisScores(answers) {
+  const raw = {
+    perception: 0,
+    feedback: 0,
+    action: 0,
+    self: 0,
+  };
+
+  questions.forEach((q) => {
+    const answer = Number(answers[q.id]);
+    if (!Number.isFinite(answer) || answer < 1 || answer > 5) return;
+    const normalized = q.reverse ? answer : 6 - answer;
+    raw[q.axis] += normalized;
+  });
+
+  const dimensions = Object.fromEntries(
+    Object.entries(raw).map(([axis, score]) => {
+      const percent = Math.round(((score - 10) / 40) * 100);
+      return [axis, Math.max(0, Math.min(100, percent))];
+    })
+  );
+
+  const code = [
+    dimensions.perception >= 50 ? "F" : "S",
+    dimensions.feedback >= 50 ? "B" : "N",
+    dimensions.action >= 50 ? "A" : "W",
+    dimensions.self >= 50 ? "C" : "J",
+  ].join("");
+
+  return { raw, dimensions, code };
+}
+
+function getAxisLabel(axis, value) {
+  const meta = AXES[axis];
+  return value >= 50 ? meta.rightName : meta.leftName;
+}
+
+function getAllAnswers(value) {
+  return Object.fromEntries(questions.map((q) => [q.id, value]));
+}
+
+function runSelfTests() {
+  const tests = [
+    {
+      name: "all neutral answers produce midpoint dimensions and FBAC by threshold",
+      answers: getAllAnswers(3),
+      expectedCode: "FBAC",
+      expectedDimension: 50,
+    },
+    {
+      name: "all strong agreement answers produce correct reverse-aware scoring",
+      answers: getAllAnswers(5),
+      expectedCode: "SNAC",
+    },
+    {
+      name: "all strong disagreement answers produce opposite reverse-aware scoring",
+      answers: getAllAnswers(1),
+      expectedCode: "FBAC",
+    },
+    {
+      name: "all result type keys are present",
+      custom: () => Object.keys(resultTypes).length === 16,
+    },
+    {
+      name: "every generated code has a result entry for neutral and extremes",
+      custom: () => [getAllAnswers(1), getAllAnswers(3), getAllAnswers(5)].every((answers) => Boolean(resultTypes[getAxisScores(answers).code])),
+    },
+    {
+      name: "safeClassName falls back for invalid values",
+      custom: () => safeClassName(undefined) === "h-5 w-5" && safeClassName(null) === "h-5 w-5" && safeClassName("  ") === "h-5 w-5" && safeClassName("h-4 w-4") === "h-4 w-4",
+    },
+    {
+      name: "choice readings cover every axis and scale value",
+      custom: () => questions.every((question) => scale.every((item) => {
+        const reading = getChoiceReading(question, item.value);
+        return typeof reading.title === "string" && reading.title.length > 0 && typeof reading.body === "string" && reading.body.length > 0;
+      })),
+    },
+    {
+      name: "question purposes cover every question",
+      custom: () => questions.every((question) => typeof questionPurposes[question.id] === "string" && questionPurposes[question.id].length > 0),
+    },
+  ];
+
+  tests.forEach((test) => {
+    const passed = test.custom
+      ? test.custom()
+      : (() => {
+          const result = getAxisScores(test.answers);
+          const codeMatches = result.code === test.expectedCode;
+          const dimensionMatches =
+            typeof test.expectedDimension !== "number" ||
+            Object.values(result.dimensions).every((value) => value === test.expectedDimension);
+          return codeMatches && dimensionMatches;
+        })();
+
+    if (!passed) {
+      console.error(`[InnerCalibrationTest self-test failed] ${test.name}`);
+    }
+  });
+}
+
+if (typeof window !== "undefined" && !window.__INNER_CALIBRATION_SELF_TESTED__) {
+  window.__INNER_CALIBRATION_SELF_TESTED__ = true;
+  runSelfTests();
+}
+
+function Header({ onReset, hasStarted }) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
+            <Icon name="Sparkles" className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold tracking-wide text-slate-950">内在校准测试</div>
+            <div className="hidden text-xs text-slate-500 sm:block">Self Calibration Test</div>
+          </div>
+        </div>
+        {hasStarted && (
+          <button
+            onClick={onReset}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <Icon name="RotateCcw" className="h-4 w-4" />
+            重来
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
+
+function Home({ onStart }) {
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
+      <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+            <Icon name="ShieldCheck" className="h-4 w-4" />
+            不是诊断，而是一面自我理解的镜子
+          </div>
+          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-950 sm:text-6xl">
+            你不是没有自我觉察，
+            <span className="block text-slate-500">你只是可能用错了审视自己的方式。</span>
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+            我们每天都在接收反馈：一句评价、一次沉默、一个失败、一次被拒绝。这个测试会帮助你看见：你如何解释他人、处理反馈、回应情绪，以及如何重新校准自己。
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={onStart}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+            >
+              开始测试
+              <Icon name="ArrowRight" className="h-5 w-5" />
+            </button>
+            <a
+              href="#model"
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              了解模型
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5"
+        >
+          <div className="rounded-[1.5rem] bg-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">测试会生成你的四维画像</div>
+            <div className="mt-5 space-y-4">
+              {Object.entries(AXES).map(([key, axis]) => {
+                const iconName = axisIcons[key];
+                return (
+                  <div key={key} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                        <Icon name={iconName} className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-950">{axis.title}</div>
+                        <div className="text-sm text-slate-500">
+                          {axis.leftName} ↔ {axis.rightName}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{axis.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="model" className="mt-16 grid gap-4 md:grid-cols-3">
+        {[
+          ["40 道题", "大约 5-8 分钟完成，围绕事实、反馈、行动和自我态度四个维度。"],
+          ["16 种类型", "像 MBTI 一样有类型结果，但不会给你贴医学或人格标签。"],
+          ["可执行练习", "结果页会给你一个具体的自我校准练习，而不只是描述你是谁。"],
+        ].map(([title, desc]) => (
+          <div key={title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-950">{title}</h3>
+            <p className="mt-3 leading-7 text-slate-600">{desc}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
+        <strong>重要说明：</strong>本测试不是医学、心理诊断或治疗工具，不能替代专业心理咨询、精神科评估或医疗建议。如果你长期处在强烈痛苦、失眠、无法正常生活，或出现自伤/伤人想法，请尽快联系专业人员或当地紧急援助服务。
+      </section>
+    </main>
+  );
+}
+
+function Test({ answers, setAnswers, onSubmit }) {
+  const [index, setIndex] = useState(0);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [showChoiceReadings, setShowChoiceReadings] = useState(false);
+  const current = questions[index];
+  const progress = Math.round(((index + 1) / questions.length) * 100);
+  const answeredCount = Object.keys(answers).length;
+  const canSubmit = answeredCount === questions.length;
+
+  const setAnswer = (value) => {
+    setAnswers((prev) => ({ ...prev, [current.id]: value }));
+
+    if (autoAdvance && index < questions.length - 1) {
+      window.setTimeout(() => {
+        setIndex((latestIndex) => (latestIndex === index ? Math.min(latestIndex + 1, questions.length - 1) : latestIndex));
+      }, 260);
+    }
+  };
+
+  const next = () => {
+    if (index < questions.length - 1) setIndex((v) => v + 1);
+  };
+
+  const prev = () => {
+    if (index > 0) setIndex((v) => v - 1);
+  };
+
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mb-8">
+        <div className="mb-3 flex items-center justify-between text-sm text-slate-500">
+          <span>第 {index + 1} / {questions.length} 题</span>
+          <span>{progress}%</span>
+        </div>
+        <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+          <motion.div
+            className="h-full rounded-full bg-slate-950"
+            initial={false}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.25 }}
+          />
+        </div>
+      </div>
+
+      <div className="mb-5 grid gap-3 md:grid-cols-2">
+        <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-semibold text-slate-950">选择后自动跳转</div>
+            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，点选答案会自动进入下一题；关闭后，需要手动点击“下一题”。</div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoAdvance}
+            onClick={() => setAutoAdvance((value) => !value)}
+            className={classNames(
+              "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition sm:w-44",
+              autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+            )}
+          >
+            <span>{autoAdvance ? "已开启" : "已关闭"}</span>
+            <span className={classNames("relative h-6 w-11 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
+              <span className={classNames("absolute top-1 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-6" : "left-1")} />
+            </span>
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-semibold text-slate-950">显示选项解读</div>
+            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，每个选项下方会直接展示“选择这个可能反映什么”。不会再使用悬浮浮现。</div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showChoiceReadings}
+            onClick={() => setShowChoiceReadings((value) => !value)}
+            className={classNames(
+              "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-semibold transition sm:w-44",
+              showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+            )}
+          >
+            <span>{showChoiceReadings ? "已显示" : "已隐藏"}</span>
+            <span className={classNames("relative h-6 w-11 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
+              <span className={classNames("absolute top-1 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-6" : "left-1")} />
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={current.id}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.22 }}
+          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-10"
+        >
+          <div className="mb-5 inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
+            {AXES[current.axis].title}
+          </div>
+          <div className="grid gap-4 lg:grid-cols-[1fr_280px] lg:items-start">
+            <h2 className="text-2xl font-bold leading-snug tracking-tight text-slate-950 sm:text-3xl">
+              {current.text}
+            </h2>
+            <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+              <div className="mb-2 flex items-center gap-2 font-semibold text-slate-950">
+                <Icon name="Info" className="h-4 w-4" />
+                如何理解这道题
+              </div>
+              {getQuestionHint(current)}
+            </aside>
+          </div>
+
+          <div className="mt-8 grid gap-3">
+            {scale.map((item) => {
+              const selected = answers[current.id] === item.value;
+              const choiceReading = getChoiceReading(current, item.value);
+              return (
+                <button
+                  key={item.value}
+                  onClick={() => setAnswer(item.value)}
+                  className={classNames(
+                    "group relative flex flex-col rounded-2xl border px-5 py-4 text-left transition",
+                    selected
+                      ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-semibold">{item.label}</span>
+                    <span className={classNames("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm", selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500")}>{item.value}</span>
+                  </div>
+                  {showChoiceReadings && (
+                    <div
+                      className={classNames(
+                        "mt-3 rounded-xl border px-3 py-3 text-sm leading-6",
+                        selected
+                          ? "border-white/20 bg-white/10 text-white/85"
+                          : "border-slate-200 bg-slate-50 text-slate-600"
+                      )}
+                    >
+                      <div className={classNames("mb-1 font-semibold", selected ? "text-white" : "text-slate-950")}>{choiceReading.title}</div>
+                      <div>{choiceReading.body}</div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex items-center justify-between gap-3">
+            <button
+              onClick={prev}
+              disabled={index === 0}
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Icon name="ArrowLeft" className="h-5 w-5" />
+              上一题
+            </button>
+
+            {index < questions.length - 1 ? (
+              <button
+                onClick={next}
+                disabled={!answers[current.id]}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                下一题
+                <Icon name="ArrowRight" className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                onClick={onSubmit}
+                disabled={!canSubmit}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                查看结果
+                <Icon name="Sparkles" className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </motion.section>
+      </AnimatePresence>
+
+      <div className="mt-5 text-center text-sm text-slate-500">
+        已完成 {answeredCount} / {questions.length} 题
+      </div>
+    </main>
+  );
+}
+
+function ScoreBar({ axis, value }) {
+  const meta = AXES[axis];
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div>
+          <div className="font-semibold text-slate-950">{meta.title}</div>
+          <div className="text-sm text-slate-500">{getAxisLabel(axis, value)}</div>
+        </div>
+        <div className="text-lg font-bold text-slate-950">{value}</div>
+      </div>
+      <div className="relative mt-4 h-3 rounded-full bg-slate-200">
+        <div className="absolute left-1/2 top-1/2 h-5 w-px -translate-y-1/2 bg-slate-400" />
+        <motion.div
+          className="h-full rounded-full bg-slate-950"
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.7 }}
+        />
+      </div>
+      <div className="mt-2 flex justify-between text-xs text-slate-500">
+        <span>{meta.leftName}</span>
+        <span>{meta.rightName}</span>
+      </div>
+    </div>
+  );
+}
+
+function Radar({ dimensions }) {
+  const entries = [
+    ["事实", dimensions.perception],
+    ["反馈", dimensions.feedback],
+    ["行动", dimensions.action],
+    ["温柔", dimensions.self],
+  ];
+  const center = 120;
+  const maxR = 82;
+  const points = entries
+    .map(([, value], i) => {
+      const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
+      const r = (value / 100) * maxR;
+      return `${center + Math.cos(angle) * r},${center + Math.sin(angle) * r}`;
+    })
+    .join(" ");
+
+  return (
+    <svg viewBox="0 0 240 240" className="h-64 w-64">
+      {[0.25, 0.5, 0.75, 1].map((ring) => (
+        <polygon
+          key={ring}
+          points={entries
+            .map((_, i) => {
+              const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
+              const r = ring * maxR;
+              return `${center + Math.cos(angle) * r},${center + Math.sin(angle) * r}`;
+            })
+            .join(" ")}
+          fill="none"
+          stroke="rgb(226 232 240)"
+          strokeWidth="1"
+        />
+      ))}
+      {entries.map((_, i) => {
+        const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
+        return (
+          <line
+            key={i}
+            x1={center}
+            y1={center}
+            x2={center + Math.cos(angle) * maxR}
+            y2={center + Math.sin(angle) * maxR}
+            stroke="rgb(226 232 240)"
+          />
+        );
+      })}
+      <motion.polygon
+        points={points}
+        fill="rgb(15 23 42 / 0.16)"
+        stroke="rgb(15 23 42)"
+        strokeWidth="3"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      />
+      {entries.map(([label, value], i) => {
+        const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
+        const r = maxR + 24;
+        return (
+          <text
+            key={label}
+            x={center + Math.cos(angle) * r}
+            y={center + Math.sin(angle) * r + 4}
+            textAnchor="middle"
+            className="fill-slate-600 text-xs font-semibold"
+          >
+            {label} {value}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
+function Result({ answers, onReset }) {
+  const [copied, setCopied] = useState(false);
+  const { dimensions, code } = useMemo(() => getAxisScores(answers), [answers]);
+  const result = resultTypes[code] || resultTypes.FBAC;
+
+  const shareText = `我的内在校准类型是「${result.name}」：${result.tagline}\n\n四维结果：${AXES.perception.title}-${getAxisLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisLabel("self", dimensions.self)}。`;
+
+  const copyShare = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareText);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareText;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8"
+        >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+            <Icon name="Share2" className="h-4 w-4" />
+            你的测试结果
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{result.name}</h1>
+          <p className="mt-4 text-xl leading-8 text-slate-600">{result.tagline}</p>
+
+          <div className="mt-8 flex justify-center rounded-[1.5rem] bg-slate-50 p-5">
+            <Radar dimensions={dimensions} />
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={copyShare}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+            >
+              {copied ? <Icon name="Check" className="h-5 w-5" /> : <Icon name="Copy" className="h-5 w-5" />}
+              {copied ? "已复制" : "复制分享文案"}
+            </button>
+            <button
+              onClick={onReset}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              <Icon name="RotateCcw" className="h-5 w-5" />
+              重新测试
+            </button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="space-y-6"
+        >
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-slate-950">核心模式</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">{result.summary}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-950">你的优势</h3>
+              <ul className="mt-4 space-y-3 text-slate-600">
+                {result.strengths.map((item) => (
+                  <li key={item} className="flex gap-3 leading-7">
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-950">可能的盲点</h3>
+              <ul className="mt-4 space-y-3 text-slate-600">
+                {result.blindspots.map((item) => (
+                  <li key={item} className="flex gap-3 leading-7">
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="mt-6 grid gap-4 md:grid-cols-4">
+        {Object.entries(dimensions).map(([axis, value]) => (
+          <ScoreBar key={axis} axis={axis} value={value} />
+        ))}
+      </section>
+
+      <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-950">你的校准练习</h2>
+        <p className="mt-4 text-lg leading-8 text-slate-600">{result.practice}</p>
+        <div className="mt-6 rounded-3xl bg-slate-50 p-5">
+          <div className="text-sm font-semibold text-slate-500">通用练习模板</div>
+          <div className="mt-4 grid gap-3 text-slate-700 md:grid-cols-2">
+            <div className="rounded-2xl bg-white p-4 shadow-sm">1. 刚才发生的事实是：______</div>
+            <div className="rounded-2xl bg-white p-4 shadow-sm">2. 我第一时间的解释是：______</div>
+            <div className="rounded-2xl bg-white p-4 shadow-sm">3. 我的情绪强度是：__/10</div>
+            <div className="rounded-2xl bg-white p-4 shadow-sm">4. 除了第一解释，还有一种可能是：______</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
+        <strong>重要说明：</strong>这个结果不是诊断，也不说明你有某种精神障碍。它只是帮助你理解自己处理反馈、情绪和行动的风格。如果你正在经历长期痛苦、失眠、强烈绝望、无法正常生活，或有自伤/伤人想法，请尽快寻求专业帮助。
+      </section>
+    </main>
+  );
+}
+
+export default function InnerCalibrationTestApp() {
+  const [stage, setStage] = useState("home");
+  const [answers, setAnswers] = useState({});
+
+  const scrollTop = () => {
+    if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const reset = () => {
+    setAnswers({});
+    setStage("home");
+    scrollTop();
+  };
+
+  const start = () => {
+    setStage("test");
+    scrollTop();
+  };
+
+  const submit = () => {
+    if (Object.keys(answers).length !== questions.length) return;
+    setStage("result");
+    scrollTop();
+  };
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.08),transparent_32%),linear-gradient(to_bottom,#ffffff,#f8fafc)] text-slate-950">
+      <Header onReset={reset} hasStarted={stage !== "home"} />
+      {stage === "home" && <Home onStart={start} />}
+      {stage === "test" && <Test answers={answers} setAnswers={setAnswers} onSubmit={submit} />}
+      {stage === "result" && <Result answers={answers} onReset={reset} />}
+      <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-slate-500 sm:px-6">
+        © {new Date().getFullYear()} 内在校准测试 · 用于自我理解，不用于医学诊断
+      </footer>
+    </div>
+  );
+}
