@@ -803,10 +803,6 @@ function Test({ answers, setAnswers, onSubmit }) {
               </p>
             </div>
 
-            <div className="flex justify-end">
-              <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
-            </div>
-
             <div className="grid gap-2 md:flex-1 md:auto-rows-fr">
               {scale.map((item) => {
                 const selected = currentAnswer === item.value;
