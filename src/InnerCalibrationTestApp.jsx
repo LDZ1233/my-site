@@ -692,6 +692,7 @@ function Test({ answers, setAnswers, onSubmit }) {
   const currentHint = getQuestionHintParts(current);
   const currentAxis = AXES[current.axis];
   const currentAnswer = answers[current.id];
+  const compactHint = currentHint.summary.replace(/^这题用来观察[:：]?/, "").trim();
 
   const setAnswer = (value) => {
     setAnswers((prev) => ({ ...prev, [current.id]: value }));
@@ -712,14 +713,14 @@ function Test({ answers, setAnswers, onSubmit }) {
   };
 
   return (
-    <main className="flex min-h-[calc(100svh-4.5rem)] w-full flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
-      <div className="grid gap-3 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <main className="flex h-[calc(100svh-4.5rem)] w-full flex-col overflow-hidden px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+      <div className="grid items-stretch gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_16rem_16rem]">
+        <div className="flex min-h-[92px] flex-col justify-between rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4 md:col-span-2 xl:col-span-1">
           <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
             <span>第 {index + 1} / {questions.length} 题</span>
             <span>{progress}%</span>
           </div>
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
             <motion.div
               className="h-full rounded-full bg-slate-950"
               initial={false}
@@ -727,59 +728,54 @@ function Test({ answers, setAnswers, onSubmit }) {
               transition={{ duration: 0.25 }}
             />
           </div>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs sm:text-sm">
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-slate-950 px-3 py-1 font-medium text-white">{currentAxis.title}</span>
             <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">已完成 {answeredCount} / {questions.length}</span>
-            <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">
-              {currentAxis.leftName} / {currentAxis.rightName}
-            </span>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2 2xl:min-w-[440px]">
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <div className="pr-3">
-              <div className="text-sm font-semibold text-slate-950">选择后自动跳转</div>
-              <div className="text-xs leading-5 text-slate-500">减少一次额外点击，适合快速答题。</div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={autoAdvance}
-              onClick={() => setAutoAdvance((value) => !value)}
-              className={classNames(
-                "flex w-24 shrink-0 items-center justify-between rounded-full border px-3 py-2 text-xs font-semibold transition",
-                autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
-              )}
-            >
-              <span>{autoAdvance ? "开启" : "关闭"}</span>
-              <span className={classNames("relative h-5 w-9 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
-                <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-4" : "left-0.5")} />
-              </span>
-            </button>
+        <div className="flex min-h-[92px] items-center justify-between rounded-[1.5rem] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="pr-3">
+            <div className="text-sm font-semibold text-slate-950">选择后自动跳转</div>
+            <div className="text-xs leading-5 text-slate-500">减少一次额外点击，适合快速答题。</div>
           </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoAdvance}
+            onClick={() => setAutoAdvance((value) => !value)}
+            className={classNames(
+              "flex h-10 w-24 shrink-0 items-center justify-between rounded-full border px-3 text-xs font-semibold transition",
+              autoAdvance ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+            )}
+          >
+            <span>{autoAdvance ? "开启" : "关闭"}</span>
+            <span className={classNames("relative h-5 w-9 rounded-full transition", autoAdvance ? "bg-white/25" : "bg-slate-300")}>
+              <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", autoAdvance ? "left-4" : "left-0.5")} />
+            </span>
+          </button>
+        </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <div className="pr-3">
-              <div className="text-sm font-semibold text-slate-950">显示选项解读</div>
-              <div className="text-xs leading-5 text-slate-500">用本题重点解释每个选项，不再依赖悬浮提示。</div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showChoiceReadings}
-              onClick={() => setShowChoiceReadings((value) => !value)}
-              className={classNames(
-                "flex w-24 shrink-0 items-center justify-between rounded-full border px-3 py-2 text-xs font-semibold transition",
-                showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
-              )}
-            >
-              <span>{showChoiceReadings ? "显示" : "隐藏"}</span>
-              <span className={classNames("relative h-5 w-9 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
-                <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-4" : "left-0.5")} />
-              </span>
-            </button>
+        <div className="flex min-h-[92px] items-center justify-between rounded-[1.5rem] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="pr-3">
+            <div className="text-sm font-semibold text-slate-950">显示选项解读</div>
+            <div className="text-xs leading-5 text-slate-500">每个选项下面用一句白话解释。</div>
           </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showChoiceReadings}
+            onClick={() => setShowChoiceReadings((value) => !value)}
+            className={classNames(
+              "flex h-10 w-24 shrink-0 items-center justify-between rounded-full border px-3 text-xs font-semibold transition",
+              showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-slate-50 text-slate-600"
+            )}
+          >
+            <span>{showChoiceReadings ? "显示" : "隐藏"}</span>
+            <span className={classNames("relative h-5 w-9 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
+              <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-4" : "left-0.5")} />
+            </span>
+          </button>
         </div>
       </div>
 
@@ -790,32 +786,24 @@ function Test({ answers, setAnswers, onSubmit }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
           transition={{ duration: 0.22 }}
-          className="mt-3 flex min-h-0 flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/5 sm:p-5 lg:p-6"
+          className="mt-2 flex min-h-0 flex-1 flex-col rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/5 sm:p-4 lg:p-5"
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="flex min-h-0 flex-1 flex-col gap-2.5">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
             </div>
 
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
-              <div className="min-w-0">
-                <h2 className="text-[clamp(1.35rem,2.2vw,2.4rem)] font-bold leading-snug tracking-tight text-slate-950">
-                  {current.text}
-                </h2>
-              </div>
-
-              <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                <div className="flex items-center gap-2 font-semibold text-slate-950">
-                  <Icon name="Info" className="h-4 w-4" />
-                  如何理解这道题
-                </div>
-                <p className="mt-2">{currentHint.summary}</p>
-                {currentHint.detail && <p className="mt-2 text-slate-500">{currentHint.detail}</p>}
-              </aside>
+            <div className="min-w-0">
+              <h2 className="text-[clamp(1.18rem,1.8vw,1.9rem)] font-bold leading-snug tracking-tight text-slate-950">
+                {current.text}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+                {compactHint}
+              </p>
             </div>
 
-            <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="text-sm font-semibold text-slate-950">请选择最接近你的反应</div>
                 <div className="text-sm text-slate-500">
@@ -825,7 +813,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <span className="text-sm text-slate-500">{currentAnswer ? `当前已选 ${currentAnswer}` : "尚未选择"}</span>
             </div>
 
-            <div className="grid flex-1 auto-rows-fr gap-2.5">
+            <div className="grid flex-1 auto-rows-fr gap-2">
               {scale.map((item) => {
                 const selected = currentAnswer === item.value;
                 const choiceReading = getChoiceReading(current, item.value);
@@ -835,7 +823,7 @@ function Test({ answers, setAnswers, onSubmit }) {
                     key={item.value}
                     onClick={() => setAnswer(item.value)}
                     className={classNames(
-                      "group relative flex h-full flex-col justify-center rounded-2xl border px-4 py-3.5 text-left transition sm:px-5",
+                      "group relative flex h-full flex-col justify-center rounded-2xl border px-4 py-2.5 text-left transition sm:px-5",
                       selected
                         ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
                         : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
@@ -851,9 +839,9 @@ function Test({ answers, setAnswers, onSubmit }) {
                         {item.value}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className={classNames("font-semibold leading-6", selected ? "text-white" : "text-slate-950")}>{item.label}</div>
+                        <div className={classNames("font-semibold leading-5", selected ? "text-white" : "text-slate-950")}>{item.label}</div>
                         {showChoiceReadings && (
-                          <div className={classNames("mt-1 text-[13px] leading-5", selected ? "text-white/85" : "text-slate-500")}>
+                          <div className={classNames("mt-1 text-xs leading-5", selected ? "text-white/85" : "text-slate-500")}>
                             {choiceReading.body}
                           </div>
                         )}
@@ -865,11 +853,11 @@ function Test({ answers, setAnswers, onSubmit }) {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-3 flex flex-col-reverse gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={prev}
               disabled={index === 0}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
             >
               <Icon name="ArrowLeft" className="h-5 w-5" />
               上一题
@@ -879,7 +867,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <button
                 onClick={next}
                 disabled={!currentAnswer}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 下一题
                 <Icon name="ArrowRight" className="h-5 w-5" />
@@ -888,7 +876,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <button
                 onClick={onSubmit}
                 disabled={!canSubmit}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 查看结果
                 <Icon name="Sparkles" className="h-5 w-5" />
