@@ -147,48 +147,48 @@ const AXES = {
 
 const questions = [
   { id: 1, axis: "perception", reverse: false, text: "当别人语气冷淡时，我会立刻觉得自己哪里做错了。" },
-  { id: 2, axis: "perception", reverse: true, text: "我能把“发生了什么”和“我以为它意味着什么”分开。（比如：对方晚回消息，不等于讨厌我）" },
+  { id: 2, axis: "perception", reverse: true, text: "我能把“发生了什么”和“我以为它意味着什么”分开。", example: "对方晚回消息，不等于讨厌我" },
   { id: 3, axis: "perception", reverse: false, text: "我经常在证据不足时，就判断别人对我的态度。" },
-  { id: 4, axis: "perception", reverse: false, text: "情绪强烈时，我很难分清现实和自己的想象。（比如：他没回消息，我会脑补出很多事）" },
+  { id: 4, axis: "perception", reverse: false, text: "情绪强烈时，我很难分清现实和自己的想象。", example: "他没回消息，我会脑补出很多事" },
   { id: 5, axis: "perception", reverse: true, text: "我会主动寻找其他解释，而不是只相信第一反应。" },
   { id: 6, axis: "perception", reverse: false, text: "一个模糊的表情或停顿，会让我忍不住反复琢磨。" },
-  { id: 7, axis: "perception", reverse: true, text: "在下结论前，我通常会先问：我有什么证据？（比如：他是真的不高兴，还是我在猜）" },
+  { id: 7, axis: "perception", reverse: true, text: "在下结论前，我通常会先问：我有什么证据？", example: "他是真的不高兴，还是我在猜" },
   { id: 8, axis: "perception", reverse: false, text: "我容易把小细节串成一个对自己不利的故事。" },
-  { id: 9, axis: "perception", reverse: true, text: "即使我很不安，也能提醒自己：感受不等于事实。（比如：我很慌，不代表事情真的糟了）" },
+  { id: 9, axis: "perception", reverse: true, text: "即使我很不安，也能提醒自己：感受不等于事实。", example: "我很慌，不代表事情真的糟了" },
   { id: 10, axis: "perception", reverse: false, text: "我常常事后发现，自己一开始把事情想得太严重了。" },
 
   { id: 11, axis: "feedback", reverse: false, text: "一次失败会让我否定自己很久。" },
   { id: 12, axis: "feedback", reverse: false, text: "别人的肯定对我影响不大，但批评会影响很久。" },
-  { id: 13, axis: "feedback", reverse: true, text: "我能把一次批评看作局部反馈，而不是整体否定。（比如：这次没做好，不等于我这个人不行）" },
+  { id: 13, axis: "feedback", reverse: true, text: "我能把一次批评看作局部反馈，而不是整体否定。", example: "这次没做好，不等于我这个人不行" },
   { id: 14, axis: "feedback", reverse: false, text: "当事情出错时，我会自动放大后果。" },
   { id: 15, axis: "feedback", reverse: false, text: "我容易忽略自己已经做得不错的地方。" },
   { id: 16, axis: "feedback", reverse: true, text: "我能同时接收正面评价和负面建议。" },
   { id: 17, axis: "feedback", reverse: false, text: "只要有人不认可我，我就很难记住那些认可我的人。" },
-  { id: 18, axis: "feedback", reverse: true, text: "我能把错误当成信息，而不是判决。（比如：这是提醒我调整，不是在给我定性）" },
+  { id: 18, axis: "feedback", reverse: true, text: "我能把错误当成信息，而不是判决。", example: "这是提醒我调整，不是在给我定性" },
   { id: 19, axis: "feedback", reverse: false, text: "我会反复回想自己说错的话或做错的事。" },
   { id: 20, axis: "feedback", reverse: true, text: "我相信一个人的价值不应该由一次表现决定。" },
 
   { id: 21, axis: "action", reverse: false, text: "情绪低落时，我会完全停下来，什么都不想做。" },
   { id: 22, axis: "action", reverse: true, text: "即使没有动力，我也能做一个很小的行动。" },
   { id: 23, axis: "action", reverse: false, text: "我经常因为害怕做不好而迟迟不开始。" },
-  { id: 24, axis: "action", reverse: true, text: "我会通过具体行动来验证自己的担心是否真实。（比如：直接去问，而不是一直猜）" },
+  { id: 24, axis: "action", reverse: true, text: "我会通过具体行动来验证自己的担心是否真实。", example: "直接去问，而不是一直猜" },
   { id: 25, axis: "action", reverse: false, text: "遇到不确定性时，我倾向于先逃避。" },
-  { id: 26, axis: "action", reverse: true, text: "当我被触发时，我可以先暂停，再选择一个较稳妥的回应。（比如：先缓一下，再回消息）" },
+  { id: 26, axis: "action", reverse: true, text: "当我被触发时，我可以先暂停，再选择一个较稳妥的回应。", example: "先缓一下，再回消息" },
   { id: 27, axis: "action", reverse: false, text: "压力一大，我就容易拖延、断联或躲起来。" },
-  { id: 28, axis: "action", reverse: true, text: "我知道如何把大问题拆成下一步小行动。（比如：先发消息、先写标题）" },
+  { id: 28, axis: "action", reverse: true, text: "我知道如何把大问题拆成下一步小行动。", example: "先发消息、先写标题" },
   { id: 29, axis: "action", reverse: false, text: "我常常等到状态完美了才愿意开始。" },
-  { id: 30, axis: "action", reverse: true, text: "我能允许自己带着不确定感继续行动。（比如：没完全准备好，也先做一点）" },
+  { id: 30, axis: "action", reverse: true, text: "我能允许自己带着不确定感继续行动。", example: "没完全准备好，也先做一点" },
 
   { id: 31, axis: "self", reverse: false, text: "我反思自己时，经常变成攻击自己。" },
-  { id: 32, axis: "self", reverse: true, text: "我能承认自己的问题，同时不否定自己这个人。（比如：这件事没做好，不等于我很差）" },
+  { id: 32, axis: "self", reverse: true, text: "我能承认自己的问题，同时不否定自己这个人。", example: "这件事没做好，不等于我很差" },
   { id: 33, axis: "self", reverse: false, text: "我会把错误理解成“我这个人不行”。" },
-  { id: 34, axis: "self", reverse: true, text: "我允许自己有反复，而不是要求一次变好。（比如：今天没做到，不代表前面都白费）" },
+  { id: 34, axis: "self", reverse: true, text: "我允许自己有反复，而不是要求一次变好。", example: "今天没做到，不代表前面都白费" },
   { id: 35, axis: "self", reverse: false, text: "我越想改变自己，越容易对自己失望。" },
-  { id: 36, axis: "self", reverse: true, text: "我能用温和但诚实的方式看待自己的问题。（比如：承认我有问题，但不骂自己）" },
+  { id: 36, axis: "self", reverse: true, text: "我能用温和但诚实的方式看待自己的问题。", example: "承认我有问题，但不骂自己" },
   { id: 37, axis: "self", reverse: false, text: "一旦发现自己有缺点，我会觉得很羞耻。" },
-  { id: 38, axis: "self", reverse: true, text: "我相信理解自己和要求自己可以同时存在。（比如：能体谅自己，也能继续改）" },
+  { id: 38, axis: "self", reverse: true, text: "我相信理解自己和要求自己可以同时存在。", example: "能体谅自己，也能继续改" },
   { id: 39, axis: "self", reverse: false, text: "我常常用很苛刻的语言和自己说话。" },
-  { id: 40, axis: "self", reverse: true, text: "我能把成长看成练习，而不是考试。（比如：做得不好也只是练习的一部分）" },
+  { id: 40, axis: "self", reverse: true, text: "我能把成长看成练习，而不是考试。", example: "做得不好也只是练习的一部分" },
 ];
 
 const resultTypes = {
@@ -797,6 +797,11 @@ function Test({ answers, setAnswers, onSubmit }) {
             <div className="min-w-0">
               <h2 className="text-[clamp(1.18rem,1.8vw,1.9rem)] font-bold leading-snug tracking-tight text-slate-950">
                 {current.text}
+                {current.example && (
+                  <span className="ml-2 font-medium text-slate-400">
+                    {current.example}
+                  </span>
+                )}
               </h2>
               <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
                 {compactHint}
