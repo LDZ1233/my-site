@@ -820,21 +820,77 @@ function Header({ onReset, hasStarted }) {
 }
 
 function Home({ onStart }) {
+  const everydayPatterns = [
+    {
+      title: "别人一冷淡，就先怪自己",
+      desc: "对方晚回消息、语气淡一点、表情不对，你心里很容易先往自己身上收。",
+    },
+    {
+      title: "明知道没那么严重，还是会反复想",
+      desc: "你不是不懂道理，只是情绪一上来，脑子里的那版故事会跑得特别快。",
+    },
+    {
+      title: "不是不想做，是怕做不好",
+      desc: "很多拖延不是懒，而是太怕失败、太怕暴露自己不够好，所以先停住。",
+    },
+    {
+      title: "对别人很宽容，对自己很狠",
+      desc: "同样的事放到别人身上你能理解，放到自己身上却很容易直接判自己不行。",
+    },
+  ];
+
+  const homeAxes = [
+    {
+      key: "perception",
+      title: "你会不会先脑补",
+      desc: "面对一句冷淡的话、一个模糊反应，你是先猜意思，还是先看事实。",
+    },
+    {
+      key: "feedback",
+      title: "你会不会把批评记太久",
+      desc: "一句不好听的话，会不会盖过很多已经做得不错的部分。",
+    },
+    {
+      key: "action",
+      title: "你会不会卡在不敢开始",
+      desc: "焦虑、怕出错、不确定时，你是先拖住，还是还能做一点点。",
+    },
+    {
+      key: "self",
+      title: "你会不会对自己太重",
+      desc: "反思自己时，你是在修正问题，还是已经开始攻击自己了。",
+    },
+  ];
+
+  const homeHighlights = [
+    ["40 道短题", "大约 5-8 分钟，不需要懂心理学术语，只要按第一反应作答。"],
+    ["没有标准答案", "不是在判断你好不好，而是在看你平时最容易卡在哪一步。"],
+    ["结果会说人话", "结果页会告诉你：你容易在哪疼、会怎么保护自己、下一步怎么做。"],
+  ];
+
   return (
     <main className="w-full px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
       <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
             <Icon name="ShieldCheck" className="h-4 w-4" />
-            不是诊断，而是一面自我理解的镜子
+            不是给你贴标签，是帮你看见自己会卡在哪
           </div>
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-950 sm:text-6xl">
-            你不是没有自我觉察，
-            <span className="block text-slate-500">你只是可能用错了审视自己的方式。</span>
+            为什么别人一句话，
+            <span className="block text-slate-500">你会在心里反复很久？</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            我们每天都在接收反馈：一句评价、一次沉默、一个失败、一次被拒绝。这个测试会帮助你看见：你如何解释他人、处理反馈、回应情绪，以及如何重新校准自己。
+            很多人不是不清醒，而是在人性的弱点面前，很容易先脑补、先自责、先拖延、先否定自己。这个测试想帮你看见：你最常卡在哪一步，以及怎么把自己慢慢拉回来。
           </p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {everydayPatterns.map((item) => (
+              <div key={item.title} className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+                <h3 className="text-base font-bold text-slate-950">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
+              </div>
+            ))}
+          </div>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               onClick={onStart}
@@ -847,7 +903,7 @@ function Home({ onStart }) {
               href="#model"
               className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
-              了解模型
+              先看看测什么
             </a>
           </div>
         </motion.div>
@@ -859,24 +915,22 @@ function Home({ onStart }) {
           className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5"
         >
           <div className="rounded-[1.5rem] bg-slate-50 p-5">
-            <div className="text-sm font-semibold text-slate-500">测试会生成你的四维画像</div>
+            <div className="text-sm font-semibold text-slate-500">这个测试主要看你会在哪 4 个地方卡住</div>
             <div className="mt-5 space-y-4">
-              {Object.entries(AXES).map(([key, axis]) => {
-                const iconName = axisIcons[key];
+              {homeAxes.map((item) => {
+                const iconName = axisIcons[item.key];
                 return (
-                  <div key={key} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
+                  <div key={item.key} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
                         <Icon name={iconName} className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-950">{axis.title}</div>
-                        <div className="text-sm text-slate-500">
-                          {axis.leftName} ↔ {axis.rightName}
-                        </div>
+                        <div className="font-semibold text-slate-950">{item.title}</div>
+                        <div className="text-sm text-slate-500">{AXES[item.key].title}</div>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{axis.description}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{item.desc}</p>
                   </div>
                 );
               })}
@@ -886,11 +940,7 @@ function Home({ onStart }) {
       </section>
 
       <section id="model" className="mt-16 grid gap-4 md:grid-cols-3">
-        {[
-          ["40 道题", "大约 5-8 分钟完成，围绕事实、反馈、行动和自我态度四个维度。"],
-          ["16 种类型", "像 MBTI 一样有类型结果，但不会给你贴医学或人格标签。"],
-          ["可执行练习", "结果页会给你一个具体的自我校准练习，而不只是描述你是谁。"],
-        ].map(([title, desc]) => (
+        {homeHighlights.map(([title, desc]) => (
           <div key={title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-950">{title}</h3>
             <p className="mt-3 leading-7 text-slate-600">{desc}</p>
