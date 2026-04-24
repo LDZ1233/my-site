@@ -738,7 +738,7 @@ function Test({ answers, setAnswers, onSubmit }) {
         <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="font-semibold text-slate-950">显示选项解读</div>
-            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，每个选项下方会直接展示“选择这个可能反映什么”。不会再使用悬浮浮现。</div>
+            <div className="mt-1 text-sm leading-6 text-slate-500">开启后，每个选项都会直接显示对应补充说明，不再依赖悬浮提示。</div>
           </div>
           <button
             type="button"
@@ -783,7 +783,7 @@ function Test({ answers, setAnswers, onSubmit }) {
             </aside>
           </div>
 
-          <div className="mt-8 grid gap-3">
+          <div className={classNames("mt-8 grid gap-3", !showChoiceReadings && "md:grid-cols-2")}>
             {scale.map((item) => {
               const selected = answers[current.id] === item.value;
               const choiceReading = getChoiceReading(current, item.value);
@@ -792,39 +792,55 @@ function Test({ answers, setAnswers, onSubmit }) {
                   key={item.value}
                   onClick={() => setAnswer(item.value)}
                   className={classNames(
-                    "group relative flex flex-col rounded-2xl border px-5 py-4 text-left transition",
+                    "group relative rounded-2xl border px-4 py-4 text-left transition sm:px-5",
                     selected
                       ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/10"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-semibold">{item.label}</span>
-                    <span className={classNames("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm", selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500")}>{item.value}</span>
-                  </div>
-                  {showChoiceReadings && (
-                    <div
-                      className={classNames(
-                        "mt-3 rounded-xl border px-3 py-3 text-sm leading-6",
-                        selected
-                          ? "border-white/20 bg-white/10 text-white/85"
-                          : "border-slate-200 bg-slate-50 text-slate-600"
-                      )}
-                    >
-                      <div className={classNames("mb-1 font-semibold", selected ? "text-white" : "text-slate-950")}>{choiceReading.title}</div>
-                      <div>{choiceReading.body}</div>
+                  <div
+                    className={classNames(
+                      "grid gap-3",
+                      showChoiceReadings
+                        ? "md:grid-cols-[minmax(0,200px)_minmax(0,1fr)] md:items-start md:gap-4"
+                        : "grid-cols-[minmax(0,1fr)_auto] items-center"
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center justify-between gap-4">
+                      <span className="min-w-0 font-semibold leading-6">{item.label}</span>
+                      <span
+                        className={classNames(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm",
+                          selected ? "bg-white text-slate-950" : "bg-slate-100 text-slate-500"
+                        )}
+                      >
+                        {item.value}
+                      </span>
                     </div>
-                  )}
+                    {showChoiceReadings && (
+                      <div
+                        className={classNames(
+                          "min-w-0 rounded-xl border px-3 py-3 text-sm leading-6",
+                          selected
+                            ? "border-white/20 bg-white/10 text-white/85"
+                            : "border-slate-200 bg-slate-50 text-slate-600"
+                        )}
+                      >
+                        <div className={classNames("mb-1 font-semibold", selected ? "text-white" : "text-slate-950")}>{choiceReading.title}</div>
+                        <div>{choiceReading.body}</div>
+                      </div>
+                    )}
+                  </div>
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-8 flex items-center justify-between gap-3">
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               onClick={prev}
               disabled={index === 0}
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
             >
               <Icon name="ArrowLeft" className="h-5 w-5" />
               上一题
@@ -834,7 +850,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <button
                 onClick={next}
                 disabled={!answers[current.id]}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 下一题
                 <Icon name="ArrowRight" className="h-5 w-5" />
@@ -843,7 +859,7 @@ function Test({ answers, setAnswers, onSubmit }) {
               <button
                 onClick={onSubmit}
                 disabled={!canSubmit}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
               >
                 查看结果
                 <Icon name="Sparkles" className="h-5 w-5" />
