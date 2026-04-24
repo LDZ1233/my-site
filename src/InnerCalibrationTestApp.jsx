@@ -713,7 +713,7 @@ function Test({ answers, setAnswers, onSubmit }) {
   };
 
   return (
-    <main className="flex h-[calc(100svh-4.5rem)] w-full flex-col overflow-hidden px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+    <main className="flex min-h-[calc(100svh-4.5rem)] w-full flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-6 md:h-[calc(100svh-4.5rem)] md:overflow-hidden">
       <div className="hidden items-stretch gap-2 md:grid md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_16rem_16rem]">
         <div className="flex min-h-[92px] flex-col justify-between rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4 md:col-span-2 xl:col-span-1">
           <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
@@ -786,9 +786,9 @@ function Test({ answers, setAnswers, onSubmit }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
           transition={{ duration: 0.22 }}
-          className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/5 sm:p-4 lg:p-5"
+          className="mt-2 flex flex-1 flex-col rounded-[1.75rem] border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/5 sm:p-4 lg:p-5 md:min-h-0 md:overflow-hidden"
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1">
+          <div className="flex flex-1 flex-col gap-2.5 md:min-h-0 md:overflow-y-auto md:pr-1">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
               <span className="rounded-full bg-slate-950 px-3 py-1 text-white">Q{index + 1}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{currentAxis.title}</span>
