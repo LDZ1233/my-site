@@ -581,6 +581,20 @@ function classNames(...items) {
   return items.filter(Boolean).join(" ");
 }
 
+function formatAiReading(text) {
+  if (!text) return "";
+  
+  return text
+    // 去掉 ---
+    .replace(/^---+$/gm, "")
+    .replace(/^---+$/gm, "")
+    // 情绪小记：加粗
+    .replace(/\*\*情绪小记：\*\*/g, "**情绪小记：**")
+    // 适合你的 3 个小练习 - 作为段落标题（加大字号加粗）
+    .replace(/^###\s*适合你的\s*3\s*个\s*小练习$/gm, "## 适合你的 3 个小练习")
+    .trim();
+}
+
 function getAxisScores(answers) {
   const raw = {
     perception: 0,
@@ -1178,8 +1192,44 @@ function Test({ answers, setAnswers, onSubmit }) {
   );
 }
 
-function Loading({ onComplete }) {
+function Loading({ answers, dimensions, code, resultName, tagline, onComplete, onAiReady }) {
+  const [aiLoading, setAiLoading] = useState(true);
+  const [aiError, setAiError] = useState(false);
+
   useEffect(() => {
+    async function loadAiReading() {
+      try {
+        const res = await fetch("https://wandering-flower-b5b8.a1324283562.workers.dev/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            answers,
+            dimensions,
+            code,
+            resultName,
+            tagline,
+          }),
+        });
+
+        const data = await res.json();
+        if (data.text) {
+          onAiReady(data.text);
+        }
+      } catch (error) {
+        console.error(error);
+        setAiError(true);
+      } finally {
+        setAiLoading(false);
+      }
+    }
+
+    loadAiReading();
+  }, [answers, dimensions, code, resultName, tagline, onAiReady]);
+
+  useEffect(() => {
+    // 无论 AI 是否加载完成，4秒后都进入结果页
     const timer = setTimeout(() => {
       onComplete();
     }, 4000);
@@ -1203,7 +1253,9 @@ function Loading({ onComplete }) {
           </div>
         </div>
         <h2 className="text-2xl font-bold text-slate-950">结果分析中</h2>
-        <p className="mt-4 text-lg text-slate-600">正在生成你的个性化解读...</p>
+        <p className="mt-4 text-lg text-slate-600">
+          {aiLoading ? "正在生成 AI 深度解读..." : aiError ? "AI 解读生成中，请稍候..." : "AI 解读已生成"}
+        </p>
         <div className="mt-8 flex justify-center gap-2">
           <span className="h-3 w-3 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: "0ms" }} />
           <span className="h-3 w-3 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: "150ms" }} />
@@ -1254,10 +1306,13 @@ function ScoreBar({ axis, value }) {
   );
 }
 
-function Result({ answers, onReset }) {
+function Result({ answers, onReset, aiReading: externalAiReading }) {
   const [copied, setCopied] = useState(false);
-  const [aiReading, setAiReading] = useState("");
+  const [internalAiReading, setInternalAiReading] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  
+  // 优先使用外部传入的 AI 解读，否则使用内部状态
+  const aiReading = externalAiReading || internalAiReading;
   const { dimensions, code } = useMemo(() => getAxisScores(answers), [answers]);
   const insights = useMemo(() => getResponseInsights(answers), [answers]);
   const result = resultTypes[code] || resultTypes.FBAC;
@@ -1307,7 +1362,10 @@ function Result({ answers, onReset }) {
 
   const shareText = `我的内在校准类型是「${displayName}」：${displayTagline}\n\n四维结果：${AXES.perception.title}-${getAxisDisplayLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisDisplayLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisDisplayLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisDisplayLabel("self", dimensions.self)}。`;
 
+  // 只有当没有外部传入 AI 解读时，才在 Result 组件内请求
   useEffect(() => {
+    if (externalAiReading) return;
+    
     async function loadAiReading() {
       setAiLoading(true);
 
@@ -1327,17 +1385,17 @@ function Result({ answers, onReset }) {
         });
 
         const data = await res.json();
-        setAiReading(data.text || "");
+        setInternalAiReading(data.text || "");
       } catch (error) {
         console.error(error);
-        setAiReading("AI 解读暂时生成失败，你仍然可以查看上方基础结果。");
+        setInternalAiReading("AI 解读暂时生成失败，你仍然可以查看上方基础结果。");
       } finally {
         setAiLoading(false);
       }
     }
 
     loadAiReading();
-  }, [answers, dimensions, code, displayName, displayTagline]);
+  }, [externalAiReading, answers, dimensions, code, displayName, displayTagline]);
 
   const copyShare = async () => {
     try {
@@ -1539,10 +1597,45 @@ function Result({ answers, onReset }) {
 
         {aiLoading ? (
           <p className="mt-4 text-slate-500">正在生成更细致的解读...</p>
-        ) : (
-          <div className="mt-4 whitespace-pre-wrap text-base leading-8 text-slate-700">
-            {aiReading}
+        ) : aiReading ? (
+          <div className="mt-4 space-y-4 text-base leading-8 text-slate-700">
+            {formatAiReading(aiReading).split("\n").map((line, i) => {
+              const trimmed = line.trim();
+              if (!trimmed) return null;
+              // 段落标题 (## 开头)
+              if (trimmed.startsWith("## ")) {
+                return (
+                  <h3 key={i} className="text-xl font-bold text-slate-950 mt-6 mb-2">
+                    {trimmed.replace("## ", "")}
+                  </h3>
+                );
+              }
+              // 加粗标题
+              if (trimmed.match(/^\*\*[^*]+\*\*:$/)) {
+                return (
+                  <h4 key={i} className="text-lg font-bold text-slate-800 mt-4 mb-1">
+                    {trimmed.replace(/\*\*/g, "")}
+                  </h4>
+                );
+              }
+              // 无序列表
+              if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+                return (
+                  <li key={i} className="ml-4 text-slate-700">
+                    {trimmed.replace(/^[*-]\s*/, "")}
+                  </li>
+                );
+              }
+              // 普通段落
+              return (
+                <p key={i} className="text-slate-700">
+                  {trimmed}
+                </p>
+              );
+            })}
           </div>
+        ) : (
+          <p className="mt-4 text-slate-500">暂无 AI 解读</p>
         )}
       </section>
 
@@ -1556,6 +1649,8 @@ function Result({ answers, onReset }) {
 export default function InnerCalibrationTestApp() {
   const [stage, setStage] = useState("home");
   const [answers, setAnswers] = useState({});
+  const [aiReading, setAiReading] = useState("");
+  const [loadingData, setLoadingData] = useState(null);
 
   const scrollTop = () => {
     if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
@@ -1576,6 +1671,14 @@ export default function InnerCalibrationTestApp() {
 
   const submit = () => {
     if (Object.keys(answers).length !== questions.length) return;
+    const { dimensions, code } = getAxisScores(answers);
+    const result = resultTypes[code] || resultTypes.FBAC;
+    const borderlineAxes = getBorderlineAxes(dimensions);
+    const displayName = borderlineAxes.length >= 3 ? "情境型校准者" : borderlineAxes.length > 0 ? `偏向${result.name}` : result.name;
+    const displayTagline = borderlineAxes.length >= 3
+      ? "你的答案大多落在中间区，更像会随场景、对象和状态切换。"
+      : result.tagline;
+    setLoadingData({ answers, dimensions, code, resultName: displayName, tagline: displayTagline });
     setStage("loading");
     scrollTop();
   };
@@ -1585,13 +1688,27 @@ export default function InnerCalibrationTestApp() {
     scrollTop();
   };
 
+  const handleAiReady = (text) => {
+    setAiReading(text);
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.08),transparent_32%),linear-gradient(to_bottom,#ffffff,#f8fafc)] text-slate-950">
       <Header onReset={reset} hasStarted={stage !== "home" && stage !== "loading"} />
       {stage === "home" && <Home onStart={start} />}
       {stage === "test" && <Test answers={answers} setAnswers={setAnswers} onSubmit={submit} />}
-      {stage === "loading" && <Loading onComplete={goToResult} />}
-      {stage === "result" && <Result answers={answers} onReset={reset} />}
+      {stage === "loading" && loadingData && (
+        <Loading
+          answers={loadingData.answers}
+          dimensions={loadingData.dimensions}
+          code={loadingData.code}
+          resultName={loadingData.resultName}
+          tagline={loadingData.tagline}
+          onComplete={goToResult}
+          onAiReady={handleAiReady}
+        />
+      )}
+      {stage === "result" && <Result answers={answers} onReset={reset} aiReading={aiReading} />}
       {stage !== "test" && (
         <footer className="w-full px-4 py-10 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
           © {new Date().getFullYear()} 内在校准测试 · 用于自我理解，不用于医学诊断
