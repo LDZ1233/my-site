@@ -118,6 +118,8 @@ const AXES = {
     rightName: "事实导向",
     title: "事实感知",
     description: "你更容易相信第一反应，还是能区分事实与解释。",
+    leftDesc: "更容易把模糊信号串成一个解释，并很快相信它。",
+    rightDesc: "更容易先看证据，把事实、猜测和情绪分开。",
   },
   feedback: {
     left: "N",
@@ -126,6 +128,8 @@ const AXES = {
     rightName: "平衡反馈",
     title: "反馈权重",
     description: "你会不会让一句否定盖过许多肯定。",
+    leftDesc: "更容易让批评、失败或不认可盖过其他证据。",
+    rightDesc: "更容易同时看见问题、肯定和可调整的部分。",
   },
   action: {
     left: "W",
@@ -134,6 +138,8 @@ const AXES = {
     rightName: "行动校准",
     title: "行动反应",
     description: "情绪来临时，你更倾向停住，还是做一个小行动。",
+    leftDesc: "压力或不确定感上来时，更容易拖延、停住或躲开。",
+    rightDesc: "即使状态不完美，也更能用小动作把自己带回现实。",
   },
   self: {
     left: "J",
@@ -142,6 +148,8 @@ const AXES = {
     rightName: "慈悲修正",
     title: "自我态度",
     description: "你反思自己时，是更容易审判自己，还是理解中修正。",
+    leftDesc: "更容易把反思变成自我批评，甚至把错误等同于自己不行。",
+    rightDesc: "更容易承认问题，同时保留对自己的理解和耐心。",
   },
 };
 
@@ -1196,81 +1204,17 @@ function ScoreBar({ axis, value }) {
         <span>{meta.rightName}</span>
       </div>
       {isBorderline && <div className="mt-3 text-xs leading-5 text-slate-500">接近中线，更容易随场景变化。</div>}
+      <div className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-600">
+        <div>
+          <div className="font-semibold text-slate-950">{meta.leftName}</div>
+          <p className="mt-1">{meta.leftDesc}</p>
+        </div>
+        <div>
+          <div className="font-semibold text-slate-950">{meta.rightName}</div>
+          <p className="mt-1">{meta.rightDesc}</p>
+        </div>
+      </div>
     </div>
-  );
-}
-
-function Radar({ dimensions }) {
-  const entries = [
-    ["事实", dimensions.perception],
-    ["反馈", dimensions.feedback],
-    ["行动", dimensions.action],
-    ["温柔", dimensions.self],
-  ];
-  const center = 120;
-  const maxR = 82;
-  const points = entries
-    .map(([, value], i) => {
-      const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
-      const r = (value / 100) * maxR;
-      return `${center + Math.cos(angle) * r},${center + Math.sin(angle) * r}`;
-    })
-    .join(" ");
-
-  return (
-    <svg viewBox="0 0 240 240" className="h-64 w-64">
-      {[0.25, 0.5, 0.75, 1].map((ring) => (
-        <polygon
-          key={ring}
-          points={entries
-            .map((_, i) => {
-              const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
-              const r = ring * maxR;
-              return `${center + Math.cos(angle) * r},${center + Math.sin(angle) * r}`;
-            })
-            .join(" ")}
-          fill="none"
-          stroke="rgb(226 232 240)"
-          strokeWidth="1"
-        />
-      ))}
-      {entries.map((_, i) => {
-        const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
-        return (
-          <line
-            key={i}
-            x1={center}
-            y1={center}
-            x2={center + Math.cos(angle) * maxR}
-            y2={center + Math.sin(angle) * maxR}
-            stroke="rgb(226 232 240)"
-          />
-        );
-      })}
-      <motion.polygon
-        points={points}
-        fill="rgb(15 23 42 / 0.16)"
-        stroke="rgb(15 23 42)"
-        strokeWidth="3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      />
-      {entries.map(([label, value], i) => {
-        const angle = -Math.PI / 2 + i * (2 * Math.PI / entries.length);
-        const r = maxR + 24;
-        return (
-          <text
-            key={label}
-            x={center + Math.cos(angle) * r}
-            y={center + Math.sin(angle) * r + 4}
-            textAnchor="middle"
-            className="fill-slate-600 text-xs font-semibold"
-          >
-            {label} {value}
-          </text>
-        );
-      })}
-    </svg>
   );
 }
 
@@ -1349,24 +1293,27 @@ function Result({ answers, onReset }) {
 
   return (
     <main className="w-full px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8"
-        >
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-            <Icon name="Share2" className="h-4 w-4" />
-            你的测试结果
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 sm:p-8"
+      >
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+              <Icon name="Share2" className="h-4 w-4" />
+              你的测试结果
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{displayName}</h1>
+            <p className="mt-4 text-xl leading-8 text-slate-600">{displayTagline}</p>
+            {confidenceNote && (
+              <p className="mt-4 rounded-[1.5rem] bg-slate-50 p-4 text-sm leading-7 text-slate-600">
+                {confidenceNote}
+              </p>
+            )}
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{displayName}</h1>
-          <p className="mt-4 text-xl leading-8 text-slate-600">{displayTagline}</p>
 
-          <div className="mt-8 flex justify-center rounded-[1.5rem] bg-slate-50 p-5">
-            <Radar dimensions={dimensions} />
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row lg:w-[22rem] lg:flex-col">
             <button
               onClick={copyShare}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
@@ -1382,63 +1329,117 @@ function Result({ answers, onReset }) {
               重新测试
             </button>
           </div>
-        </motion.div>
+        </div>
+      </motion.section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="space-y-6"
-        >
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-2xl font-bold text-slate-950">结果摘要</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">{result.summary}</p>
-            {confidenceNote && (
-              <p className="mt-4 rounded-[1.5rem] bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-                {confidenceNote}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">最明显触发点</h3>
-              <div className="mt-4 space-y-3">
-                {insights.topTriggers.length > 0 ? (
-                  insights.topTriggers.slice(0, 2).map((theme) => (
-                    <p key={theme.key} className="text-sm leading-7 text-slate-600">
-                      <span className="font-semibold text-slate-950">{theme.title}：</span>
-                      {theme.painText}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-sm leading-7 text-slate-500">你的回答相对均衡，没有某一个高强度触发点明显压过其他部分。</p>
-                )}
-              </div>
-            </div>
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">已有修复能力</h3>
-              <div className="mt-4 space-y-3">
-                {insights.topResources.length > 0 ? (
-                  insights.topResources.slice(0, 2).map((theme) => (
-                    <p key={theme.key} className="text-sm leading-7 text-slate-600">
-                      <span className="font-semibold text-slate-950">{theme.title}：</span>
-                      {theme.resourceText}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-sm leading-7 text-slate-500">这次结果里，修复能力的信号还不够突出，后面的小练习会更适合你。</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      <section className="mt-6 grid gap-4 md:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {Object.entries(dimensions).map(([axis, value]) => (
           <ScoreBar key={axis} axis={axis} value={value} />
         ))}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-2xl font-bold text-slate-950">完整解读</h2>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h3 className="text-xl font-bold text-slate-950">最明显触发点</h3>
+            <div className="mt-4 space-y-4">
+              {insights.topTriggers.length > 0 ? (
+                insights.topTriggers.slice(0, 2).map((theme) => (
+                  <div key={theme.key} className="rounded-2xl bg-slate-50 p-5">
+                    <div className="font-semibold text-slate-950">{theme.title}</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">{theme.painText}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-500">{theme.comfortText}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm leading-7 text-slate-500">你的回答相对均衡，没有某一个高强度触发点明显压过其他部分。</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h3 className="text-xl font-bold text-slate-950">已有修复能力</h3>
+            <div className="mt-4 space-y-4">
+              {insights.topResources.length > 0 ? (
+                insights.topResources.slice(0, 2).map((theme) => (
+                  <div key={theme.key} className="rounded-2xl bg-slate-50 p-5">
+                    <div className="font-semibold text-slate-950">{theme.title}</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">{theme.resourceText}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm leading-7 text-slate-500">这次结果里，修复能力的信号还不够突出，后面的小练习会更适合你。</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h3 className="text-xl font-bold text-slate-950">你的优势</h3>
+          <ul className="mt-4 space-y-3 text-slate-600">
+            {result.strengths.map((item) => (
+              <li key={item} className="flex gap-3 leading-7">
+                <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h3 className="text-xl font-bold text-slate-950">可能的盲点</h3>
+          <ul className="mt-4 space-y-3 text-slate-600">
+            {result.blindspots.map((item) => (
+              <li key={item} className="flex gap-3 leading-7">
+                <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+            <Icon name={insights.dominantPain ? "Info" : "ShieldCheck"} className="h-4 w-4" />
+            {dominantSignalTitle}
+          </div>
+          {dominantSignal ? (
+            <>
+              <h3 className="mt-4 text-2xl font-bold leading-snug text-slate-950">
+                {getQuestionDisplayText(dominantSignal.question)}
+              </h3>
+              <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
+                你的选择：{dominantSignal.answerLabel}
+              </div>
+              <p className="mt-5 text-lg leading-8 text-slate-600">{dominantSignal.reading.body}</p>
+              <p className="mt-4 rounded-[1.5rem] bg-slate-50 p-5 text-sm leading-7 text-slate-500">{dominantSignalNote}</p>
+            </>
+          ) : (
+            <p className="mt-4 text-lg leading-8 text-slate-600">这次你的回答比较居中，所以没有出现一眼就很突出的高强度题目。</p>
+          )}
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h3 className="text-xl font-bold text-slate-950">校准问题</h3>
+          <div className="mt-4 space-y-3">
+            {calibrationPrompts.map((prompt) => (
+              <div key={prompt.title} className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+                <div className="font-semibold text-slate-950">{prompt.title}</div>
+                <div className="mt-1">{prompt.body}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
+            <div className="text-sm font-semibold text-slate-500">可能的自动保护</div>
+            <p className="mt-3 text-base leading-7 text-slate-700">
+              {topTrigger?.protectionText || "当我们不舒服时，总会有一些自动保护动作。先看见它们，比立刻改掉它们更重要。"}
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -1452,77 +1453,7 @@ function Result({ answers, onReset }) {
             </div>
           ))}
         </div>
-      </section>
-
-      <details className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <summary className="cursor-pointer text-xl font-bold text-slate-950">展开完整解读</summary>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-5">
-            <h3 className="text-lg font-bold text-slate-950">你的优势</h3>
-            <ul className="mt-4 space-y-3 text-slate-600">
-              {result.strengths.map((item) => (
-                <li key={item} className="flex gap-3 leading-7">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl bg-slate-50 p-5">
-            <h3 className="text-lg font-bold text-slate-950">可能的盲点</h3>
-            <ul className="mt-4 space-y-3 text-slate-600">
-              {result.blindspots.map((item) => (
-                <li key={item} className="flex gap-3 leading-7">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-2xl bg-slate-50 p-5">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              <Icon name={insights.dominantPain ? "Info" : "ShieldCheck"} className="h-4 w-4" />
-              {dominantSignalTitle}
-            </div>
-            {dominantSignal ? (
-              <>
-                <h3 className="mt-4 text-xl font-bold leading-snug text-slate-950">
-                  {getQuestionDisplayText(dominantSignal.question)}
-                </h3>
-                <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-                  你的选择：{dominantSignal.answerLabel}
-                </div>
-                <p className="mt-5 leading-7 text-slate-600">{dominantSignal.reading.body}</p>
-                <p className="mt-4 text-sm leading-7 text-slate-500">{dominantSignalNote}</p>
-              </>
-            ) : (
-              <p className="mt-4 leading-7 text-slate-600">这次你的回答比较居中，所以没有出现一眼就很突出的高强度题目。</p>
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-slate-50 p-5">
-            <h3 className="text-lg font-bold text-slate-950">校准问题</h3>
-            <div className="mt-4 space-y-3">
-              {calibrationPrompts.map((prompt) => (
-                <div key={prompt.title} className="text-sm leading-7 text-slate-700">
-                  <span className="font-semibold text-slate-950">{prompt.title}：</span>
-                  {prompt.body}
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 border-t border-slate-200 pt-5">
-              <div className="text-sm font-semibold text-slate-500">可能的自动保护</div>
-              <p className="mt-2 text-sm leading-7 text-slate-700">
-                {topTrigger?.protectionText || "当我们不舒服时，总会有一些自动保护动作。先看见它们，比立刻改掉它们更重要。"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl bg-slate-50 p-5">
+        <div className="mt-6 rounded-2xl bg-slate-50 p-5">
           <div className="text-sm font-semibold text-slate-500">通用练习模板</div>
           <div className="mt-4 grid gap-3 text-slate-700 md:grid-cols-2">
             <div>1. 刚才发生的事实是：______</div>
@@ -1531,7 +1462,7 @@ function Result({ answers, onReset }) {
             <div>4. 除了第一解释，还有一种可能是：______</div>
           </div>
         </div>
-      </details>
+      </section>
 
       <section className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
         <strong>重要说明：</strong>这个结果不是诊断，也不说明你有某种精神障碍。它只是帮助你理解自己处理反馈、情绪和行动的风格。如果你正在经历长期痛苦、失眠、强烈绝望、无法正常生活，或有自伤/伤人想法，请尽快寻求专业帮助。
