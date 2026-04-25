@@ -1178,6 +1178,42 @@ function Test({ answers, setAnswers, onSubmit }) {
   );
 }
 
+function Loading({ onComplete }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <main className="flex min-h-[calc(100svh-4.5rem)] w-full flex-col items-center justify-center px-4 py-16">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="text-center"
+      >
+        <div className="mb-8 flex justify-center">
+          <div className="relative h-20 w-20">
+            <div className="absolute inset-0 animate-ping rounded-full bg-slate-950 opacity-20" />
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-950">
+              <Icon name="Sparkles" className="h-10 w-10 text-white" />
+            </div>
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-slate-950">结果分析中</h2>
+        <p className="mt-4 text-lg text-slate-600">正在生成你的个性化解读...</p>
+        <div className="mt-8 flex justify-center gap-2">
+          <span className="h-3 w-3 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: "0ms" }} />
+          <span className="h-3 w-3 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: "150ms" }} />
+          <span className="h-3 w-3 animate-bounce rounded-full bg-slate-400" style={{ animationDelay: "300ms" }} />
+        </div>
+      </motion.div>
+    </main>
+  );
+}
+
 function ScoreBar({ axis, value }) {
   const meta = AXES[axis];
   const isBorderline = isAxisBorderline(value);
@@ -1540,15 +1576,21 @@ export default function InnerCalibrationTestApp() {
 
   const submit = () => {
     if (Object.keys(answers).length !== questions.length) return;
+    setStage("loading");
+    scrollTop();
+  };
+
+  const goToResult = () => {
     setStage("result");
     scrollTop();
   };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.08),transparent_32%),linear-gradient(to_bottom,#ffffff,#f8fafc)] text-slate-950">
-      <Header onReset={reset} hasStarted={stage !== "home"} />
+      <Header onReset={reset} hasStarted={stage !== "home" && stage !== "loading"} />
       {stage === "home" && <Home onStart={start} />}
       {stage === "test" && <Test answers={answers} setAnswers={setAnswers} onSubmit={submit} />}
+      {stage === "loading" && <Loading onComplete={goToResult} />}
       {stage === "result" && <Result answers={answers} onReset={reset} />}
       {stage !== "test" && (
         <footer className="w-full px-4 py-10 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
