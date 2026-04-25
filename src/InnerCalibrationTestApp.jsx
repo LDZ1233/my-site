@@ -818,91 +818,61 @@ function Header({ onReset, hasStarted }) {
 }
 
 function Home({ onStart }) {
-  const everydayPatterns = [
-    {
-      title: "别人一冷淡，就先怪自己",
-      desc: "对方晚回消息、语气淡一点、表情不对，你心里很容易先往自己身上收。",
-    },
-    {
-      title: "明知道没那么严重，还是会反复想",
-      desc: "你不是不懂道理，只是情绪一上来，脑子里的那版故事会跑得特别快。",
-    },
-    {
-      title: "不是不想做，是怕做不好",
-      desc: "很多拖延不是懒，而是太怕失败、太怕暴露自己不够好，所以先停住。",
-    },
-    {
-      title: "对别人很宽容，对自己很狠",
-      desc: "同样的事放到别人身上你能理解，放到自己身上却很容易直接判自己不行。",
-    },
-  ];
-
   const homeAxes = [
     {
       key: "perception",
-      title: "你会不会先脑补",
-      desc: "面对一句冷淡的话、一个模糊反应，你是先猜意思，还是先看事实。",
+      title: "事实感知",
+      desc: "分清发生了什么，和自己以为它意味着什么。",
     },
     {
       key: "feedback",
-      title: "你会不会把批评记太久",
-      desc: "一句不好听的话，会不会盖过很多已经做得不错的部分。",
+      title: "反馈权重",
+      desc: "看负面反馈会不会盖过已经存在的正向证据。",
     },
     {
       key: "action",
-      title: "你会不会卡在不敢开始",
-      desc: "焦虑、怕出错、不确定时，你是先拖住，还是还能做一点点。",
+      title: "行动反应",
+      desc: "看压力来时，是更容易停住，还是能做一个小动作。",
     },
     {
       key: "self",
-      title: "你会不会对自己太重",
-      desc: "反思自己时，你是在修正问题，还是已经开始攻击自己了。",
+      title: "自我态度",
+      desc: "看反思自己时，是进入审判，还是能温和修正。",
     },
   ];
 
-  const homeHighlights = [
-    ["40 道短题", "大约 5-8 分钟，不需要懂心理学术语，只要按第一反应作答。"],
-    ["没有标准答案", "不是在判断你好不好，而是在看你平时最容易卡在哪一步。"],
-    ["结果会说人话", "结果页会告诉你：你容易在哪疼、会怎么保护自己、下一步怎么做。"],
-  ];
+  const quickFacts = ["40 道短题", "约 5-8 分钟", "没有标准答案"];
 
   return (
-    <main className="w-full px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
-      <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+    <main className="w-full px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+      <section className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 shadow-sm">
             <Icon name="ShieldCheck" className="h-4 w-4" />
-            不是给你贴标签，是帮你看见自己会卡在哪
+            不是诊断，也不是给你贴标签
           </div>
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-950 sm:text-6xl">
-            为什么别人一句话，
-            <span className="block text-slate-500">你会在心里反复很久？</span>
+            内在校准测试
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            很多人不是不清醒，而是在人性的弱点面前，很容易先脑补、先自责、先拖延、先否定自己。这个测试想帮你看见：你最常卡在哪一步，以及怎么把自己慢慢拉回来。
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
+            看见你在模糊信号、负面反馈、压力行动和自我反思里，最容易卡住的那一步。
           </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {everydayPatterns.map((item) => (
-              <div key={item.title} className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-                <h3 className="text-base font-bold text-slate-950">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
-              </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {quickFacts.map((item) => (
+              <span key={item} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
+                {item}
+              </span>
             ))}
           </div>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
               onClick={onStart}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
               开始测试
               <Icon name="ArrowRight" className="h-5 w-5" />
             </button>
-            <a
-              href="#model"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            >
-              先看看测什么
-            </a>
+            <span className="text-sm leading-6 text-slate-500">结果会给出主要触发点、已有资源和下一步建议。</span>
           </div>
         </motion.div>
 
@@ -910,45 +880,37 @@ function Home({ onStart }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5"
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-xl shadow-slate-950/5"
         >
-          <div className="rounded-[1.5rem] bg-slate-50 p-5">
-            <div className="text-sm font-semibold text-slate-500">这个测试主要看你会在哪 4 个地方卡住</div>
-            <div className="mt-5 space-y-4">
-              {homeAxes.map((item) => {
-                const iconName = axisIcons[item.key];
-                return (
-                  <div key={item.key} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                        <Icon name={iconName} className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-950">{item.title}</div>
-                        <div className="text-sm text-slate-500">{AXES[item.key].title}</div>
-                      </div>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{item.desc}</p>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-slate-950">测什么</h2>
+            <span className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">4 个维度</span>
+          </div>
+          <div className="mt-4 divide-y divide-slate-200">
+            {homeAxes.map((item) => {
+              const iconName = axisIcons[item.key];
+              return (
+                <div key={item.key} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-950 text-white">
+                    <Icon name={iconName} className="h-4 w-4" />
                   </div>
-                );
-              })}
-            </div>
+                  <div>
+                    <div className="font-semibold text-slate-950">{item.title}</div>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       </section>
 
-      <section id="model" className="mt-16 grid gap-4 md:grid-cols-3">
-        {homeHighlights.map(([title, desc]) => (
-          <div key={title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-950">{title}</h3>
-            <p className="mt-3 leading-7 text-slate-600">{desc}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-8 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
-        <strong>重要说明：</strong>本测试不是医学、心理诊断或治疗工具，不能替代专业心理咨询、精神科评估或医疗建议。如果你长期处在强烈痛苦、失眠、无法正常生活，或出现自伤/伤人想法，请尽快联系专业人员或当地紧急援助服务。
-      </section>
+      <details className="mx-auto mt-6 max-w-6xl rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
+        <summary className="cursor-pointer font-semibold">重要说明</summary>
+        <p className="mt-2">
+          本测试不是医学、心理诊断或治疗工具，不能替代专业心理咨询、精神科评估或医疗建议。如果你长期处在强烈痛苦、失眠、无法正常生活，或出现自伤/伤人想法，请尽快联系专业人员或当地紧急援助服务。
+        </p>
+      </details>
     </main>
   );
 }
