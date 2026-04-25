@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function safeClassName(value, fallback = "h-5 w-5") {
@@ -1220,6 +1220,8 @@ function ScoreBar({ axis, value }) {
 
 function Result({ answers, onReset }) {
   const [copied, setCopied] = useState(false);
+  const [aiReading, setAiReading] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const { dimensions, code } = useMemo(() => getAxisScores(answers), [answers]);
   const insights = useMemo(() => getResponseInsights(answers), [answers]);
   const result = resultTypes[code] || resultTypes.FBAC;
@@ -1268,6 +1270,38 @@ function Result({ answers, onReset }) {
     : "这说明在这类场景里，你已经有一部分能力，可以先把自己稳住，而不是完全被当下拖走。";
 
   const shareText = `我的内在校准类型是「${displayName}」：${displayTagline}\n\n四维结果：${AXES.perception.title}-${getAxisDisplayLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisDisplayLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisDisplayLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisDisplayLabel("self", dimensions.self)}。`;
+
+  useEffect(() => {
+    async function loadAiReading() {
+      setAiLoading(true);
+
+      try {
+        const res = await fetch("https://wandering-flower-b5b8.a1324283562.workers.dev/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            answers,
+            dimensions,
+            code,
+            resultName: displayName,
+            tagline: displayTagline,
+          }),
+        });
+
+        const data = await res.json();
+        setAiReading(data.text || "");
+      } catch (error) {
+        console.error(error);
+        setAiReading("AI 解读暂时生成失败，你仍然可以查看上方基础结果。");
+      } finally {
+        setAiLoading(false);
+      }
+    }
+
+    loadAiReading();
+  }, [answers, dimensions, code, displayName, displayTagline]);
 
   const copyShare = async () => {
     try {
@@ -1462,6 +1496,18 @@ function Result({ answers, onReset }) {
             <div>4. 除了第一解释，还有一种可能是：______</div>
           </div>
         </div>
+      </section>
+
+      <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-2xl font-bold text-slate-950">AI 深度解读</h2>
+
+        {aiLoading ? (
+          <p className="mt-4 text-slate-500">正在生成更细致的解读...</p>
+        ) : (
+          <div className="mt-4 whitespace-pre-wrap text-base leading-8 text-slate-700">
+            {aiReading}
+          </div>
+        )}
       </section>
 
       <section className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
