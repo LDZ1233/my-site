@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function safeClassName(value, fallback = "h-5 w-5") {
@@ -506,20 +506,6 @@ const questionPurposes = {
   40: "这题用来观察：你是否把成长看成持续练习，而不是一次考试。它测的是长期主义自我修正心态。",
 };
 
-function getQuestionHintParts(question) {
-  const fallback = "这题用来观察你在这个维度上的常见反应模式。请按第一直觉作答，不需要选择看起来更正确的答案。";
-  const raw = questionPurposes[question.id] || fallback;
-  const parts = raw
-    .split("。")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return {
-    summary: parts[0] ? `${parts[0]}。` : fallback,
-    detail: parts[1] ? `${parts.slice(1).join("，")}。` : "",
-  };
-}
-
 function getChoiceDirection(question, value) {
   if (value === 3) return "middle";
   const agrees = value > 3;
@@ -709,6 +695,18 @@ function getResponseInsights(answers) {
 function getAxisLabel(axis, value) {
   const meta = AXES[axis];
   return value >= 50 ? meta.rightName : meta.leftName;
+}
+
+function isAxisBorderline(value) {
+  return value >= 45 && value <= 55;
+}
+
+function getAxisDisplayLabel(axis, value) {
+  return isAxisBorderline(value) ? "情境型" : getAxisLabel(axis, value);
+}
+
+function getBorderlineAxes(dimensions) {
+  return Object.entries(dimensions).filter(([, value]) => isAxisBorderline(value));
 }
 
 function getAllAnswers(value) {
@@ -963,10 +961,9 @@ function Test({ answers, setAnswers, onSubmit }) {
   const progress = Math.round(((index + 1) / questions.length) * 100);
   const answeredCount = Object.keys(answers).length;
   const canSubmit = answeredCount === questions.length;
-  const currentHint = getQuestionHintParts(current);
   const currentAxis = AXES[current.axis];
   const currentAnswer = answers[current.id];
-  const compactHint = currentHint.summary.replace(/^这题用来观察[:：]?/, "").trim();
+  const answerGuide = "按最近一段时间最常见的反应作答。这里没有标准答案，也不用把自己固定成某一种人。";
 
   const setAnswer = (value) => {
     setAnswers((prev) => ({ ...prev, [current.id]: value }));
@@ -1032,8 +1029,8 @@ function Test({ answers, setAnswers, onSubmit }) {
 
         <div className="flex min-h-[92px] items-center justify-between rounded-[1.5rem] border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <div className="pr-3">
-            <div className="text-sm font-semibold text-slate-950">显示选项解读</div>
-            <div className="text-xs leading-5 text-slate-500">每个选项下面用一句白话解释。</div>
+            <div className="text-sm font-semibold text-slate-950">显示作答辅助</div>
+            <div className="text-xs leading-5 text-slate-500">拿不准时再打开，用来理解量表方向。</div>
           </div>
           <button
             type="button"
@@ -1078,7 +1075,7 @@ function Test({ answers, setAnswers, onSubmit }) {
                 )}
               </h2>
               <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
-                {compactHint}
+                {answerGuide}
               </p>
             </div>
 
@@ -1166,7 +1163,7 @@ function Test({ answers, setAnswers, onSubmit }) {
                     showChoiceReadings ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700"
                   )}
                 >
-                  <span>选项解读</span>
+                  <span>作答辅助</span>
                   <span className={classNames("relative h-5 w-9 rounded-full transition", showChoiceReadings ? "bg-white/25" : "bg-slate-300")}>
                     <span className={classNames("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition", showChoiceReadings ? "left-4" : "left-0.5")} />
                   </span>
@@ -1213,12 +1210,13 @@ function Test({ answers, setAnswers, onSubmit }) {
 
 function ScoreBar({ axis, value }) {
   const meta = AXES[axis];
+  const isBorderline = isAxisBorderline(value);
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div>
           <div className="font-semibold text-slate-950">{meta.title}</div>
-          <div className="text-sm text-slate-500">{getAxisLabel(axis, value)}</div>
+          <div className="text-sm text-slate-500">{getAxisDisplayLabel(axis, value)}</div>
         </div>
         <div className="text-lg font-bold text-slate-950">{value}</div>
       </div>
@@ -1235,6 +1233,7 @@ function ScoreBar({ axis, value }) {
         <span>{meta.leftName}</span>
         <span>{meta.rightName}</span>
       </div>
+      {isBorderline && <div className="mt-3 text-xs leading-5 text-slate-500">接近中线，更容易随场景变化。</div>}
     </div>
   );
 }
@@ -1318,29 +1317,43 @@ function Result({ answers, onReset }) {
   const { dimensions, code } = useMemo(() => getAxisScores(answers), [answers]);
   const insights = useMemo(() => getResponseInsights(answers), [answers]);
   const result = resultTypes[code] || resultTypes.FBAC;
+  const borderlineAxes = getBorderlineAxes(dimensions);
+  const borderlineNames = borderlineAxes.map(([axis]) => AXES[axis].title).join("、");
+  const displayName = borderlineAxes.length >= 3 ? "情境型校准者" : borderlineAxes.length > 0 ? `偏向${result.name}` : result.name;
+  const displayTagline = borderlineAxes.length >= 3
+    ? "你的答案大多落在中间区，更像会随场景、对象和状态切换。"
+    : result.tagline;
+  const confidenceNote = borderlineAxes.length > 0
+    ? `${borderlineNames}接近中线，这部分更适合看成倾向，不适合当成定论。`
+    : "";
   const topTrigger = insights.topTriggers[0] || null;
-  const secondaryTrigger = insights.topTriggers[1] || null;
-  const topResource = insights.topResources[0] || null;
   const dominantSignal = insights.dominantPain || insights.dominantResource;
-  const innerStateParagraphs = [
-    topTrigger?.painText,
-    topTrigger?.comfortText,
-    topTrigger?.protectionText,
-    topResource?.resourceText,
-  ].filter(Boolean);
-  const reflectionPrompts = [...new Set([topTrigger?.reflection, topTrigger?.followUp, secondaryTrigger?.reflection])].filter(Boolean).slice(0, 3);
+  const calibrationPrompts = [
+    {
+      title: "事实",
+      body: topTrigger?.reflection || "我现在能确定发生了什么？哪些还只是自己的解释或预判？",
+    },
+    {
+      title: "反证",
+      body: topTrigger?.followUp || "有没有任何证据，能支持一个没那么糟、没那么指向自己的解释？",
+    },
+    {
+      title: "信息",
+      body: "如果先不急着得出结论，我还需要什么信息、时间或支持，才能看得更准一点？",
+    },
+  ];
   const nextStepCards = [
     {
-      title: "先照顾自己",
-      body: topTrigger?.comfortText || "先别急着给自己下结论，能看见自己的反应，本身就是修复的起点。",
+      title: "先降强度",
+      body: "把当下反应命名成一句话：我正在紧张、害怕、自责或想退开。只命名，不急着判定它对不对。",
     },
     {
-      title: "先做一个小动作",
-      body: topTrigger?.step || result.practice,
+      title: "再取两边证据",
+      body: "写下支持当前判断的证据，再写下不支持它的证据。两边都要有，避免只喂养一个结论。",
     },
     {
-      title: "你已经有的底子",
-      body: topResource?.resourceText || "你的结果里并不只有卡点，你也有能慢慢把自己带回现实的部分。",
+      title: "最后做小动作",
+      body: topTrigger?.step || "把建议缩成 5 分钟内能完成的版本，只求启动，不求一次解决。",
     },
   ];
   const dominantSignalTitle = insights.dominantPain ? "最容易刺到你的那道题" : "你已经有的稳定点";
@@ -1348,7 +1361,7 @@ function Result({ answers, onReset }) {
     ? "这不说明你一定有某段明确的创伤，更像是这类场景最容易刺到你，所以你的反应会更快、更重。"
     : "这说明在这类场景里，你已经有一部分能力，可以先把自己稳住，而不是完全被当下拖走。";
 
-  const shareText = `我的内在校准类型是「${result.name}」：${result.tagline}\n\n四维结果：${AXES.perception.title}-${getAxisLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisLabel("self", dimensions.self)}。`;
+  const shareText = `我的内在校准类型是「${displayName}」：${displayTagline}\n\n四维结果：${AXES.perception.title}-${getAxisDisplayLabel("perception", dimensions.perception)} / ${AXES.feedback.title}-${getAxisDisplayLabel("feedback", dimensions.feedback)} / ${AXES.action.title}-${getAxisDisplayLabel("action", dimensions.action)} / ${AXES.self.title}-${getAxisDisplayLabel("self", dimensions.self)}。`;
 
   const copyShare = async () => {
     try {
@@ -1384,8 +1397,8 @@ function Result({ answers, onReset }) {
             <Icon name="Share2" className="h-4 w-4" />
             你的测试结果
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{result.name}</h1>
-          <p className="mt-4 text-xl leading-8 text-slate-600">{result.tagline}</p>
+          <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{displayName}</h1>
+          <p className="mt-4 text-xl leading-8 text-slate-600">{displayTagline}</p>
 
           <div className="mt-8 flex justify-center rounded-[1.5rem] bg-slate-50 p-5">
             <Radar dimensions={dimensions} />
@@ -1416,29 +1429,25 @@ function Result({ answers, onReset }) {
           className="space-y-6"
         >
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-2xl font-bold text-slate-950">更像你心里的状态</h2>
-            <div className="mt-4 space-y-3 text-lg leading-8 text-slate-600">
-              {innerStateParagraphs.length > 0 ? (
-                innerStateParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
-              ) : (
-                <p>{result.summary}</p>
-              )}
-            </div>
-            <div className="mt-5 rounded-[1.5rem] bg-slate-50 p-5 text-base leading-7 text-slate-600">
-              {result.summary}
-            </div>
+            <h2 className="text-2xl font-bold text-slate-950">结果摘要</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">{result.summary}</p>
+            {confidenceNote && (
+              <p className="mt-4 rounded-[1.5rem] bg-slate-50 p-4 text-sm leading-7 text-slate-600">
+                {confidenceNote}
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">最近最容易刺到你的点</h3>
+              <h3 className="text-xl font-bold text-slate-950">最明显触发点</h3>
               <div className="mt-4 space-y-3">
                 {insights.topTriggers.length > 0 ? (
-                  insights.topTriggers.map((theme) => (
-                    <div key={theme.key} className="rounded-2xl bg-slate-50 p-4">
-                      <div className="font-semibold text-slate-950">{theme.title}</div>
-                      <p className="mt-2 text-sm leading-7 text-slate-600">{theme.painText}</p>
-                    </div>
+                  insights.topTriggers.slice(0, 2).map((theme) => (
+                    <p key={theme.key} className="text-sm leading-7 text-slate-600">
+                      <span className="font-semibold text-slate-950">{theme.title}：</span>
+                      {theme.painText}
+                    </p>
                   ))
                 ) : (
                   <p className="text-sm leading-7 text-slate-500">你的回答相对均衡，没有某一个高强度触发点明显压过其他部分。</p>
@@ -1446,44 +1455,19 @@ function Result({ answers, onReset }) {
               </div>
             </div>
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">你已经有的修复能力</h3>
+              <h3 className="text-xl font-bold text-slate-950">已有修复能力</h3>
               <div className="mt-4 space-y-3">
                 {insights.topResources.length > 0 ? (
-                  insights.topResources.map((theme) => (
-                    <div key={theme.key} className="rounded-2xl bg-slate-50 p-4">
-                      <div className="font-semibold text-slate-950">{theme.title}</div>
-                      <p className="mt-2 text-sm leading-7 text-slate-600">{theme.resourceText}</p>
-                    </div>
+                  insights.topResources.slice(0, 2).map((theme) => (
+                    <p key={theme.key} className="text-sm leading-7 text-slate-600">
+                      <span className="font-semibold text-slate-950">{theme.title}：</span>
+                      {theme.resourceText}
+                    </p>
                   ))
                 ) : (
                   <p className="text-sm leading-7 text-slate-500">这次结果里，修复能力的信号还不够突出，后面的小练习会更适合你。</p>
                 )}
               </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">你的优势</h3>
-              <ul className="mt-4 space-y-3 text-slate-600">
-                {result.strengths.map((item) => (
-                  <li key={item} className="flex gap-3 leading-7">
-                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-950">可能的盲点</h3>
-              <ul className="mt-4 space-y-3 text-slate-600">
-                {result.blindspots.map((item) => (
-                  <li key={item} className="flex gap-3 leading-7">
-                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </motion.div>
@@ -1495,77 +1479,97 @@ function Result({ answers, onReset }) {
         ))}
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-            <Icon name={insights.dominantPain ? "Info" : "ShieldCheck"} className="h-4 w-4" />
-            {dominantSignalTitle}
-          </div>
-          {dominantSignal ? (
-            <>
-              <h2 className="mt-4 text-2xl font-bold leading-snug text-slate-950">
-                {getQuestionDisplayText(dominantSignal.question)}
-              </h2>
-              <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
-                你的选择：{dominantSignal.answerLabel}
-              </div>
-              <p className="mt-5 text-lg leading-8 text-slate-600">{dominantSignal.reading.body}</p>
-              <div className="mt-5 rounded-[1.5rem] bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-                {dominantSignalNote}
-              </div>
-            </>
-          ) : (
-            <p className="mt-4 text-lg leading-8 text-slate-600">这次你的回答比较居中，所以没有出现一眼就很突出的高强度题目。</p>
-          )}
-        </div>
-
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-bold text-slate-950">先问自己的问题</h2>
-          <div className="mt-4 space-y-3">
-            {reflectionPrompts.length > 0 ? (
-              reflectionPrompts.map((prompt, index) => (
-                <div key={prompt} className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                  <div className="font-semibold text-slate-950">问题 {index + 1}</div>
-                  <div className="mt-1">{prompt}</div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                你现在更需要的，可能不是继续分析，而是先允许自己慢一点、具体一点地看这件事。
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-            <div className="text-sm font-semibold text-slate-500">你常见的保护方式</div>
-            <p className="mt-3 text-base leading-7 text-slate-700">
-              {topTrigger?.protectionText || "当我们不舒服时，总会有一些自动保护动作。先看见它们，比立刻改掉它们更重要。"}
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-2xl font-bold text-slate-950">更适合你的校准建议</h2>
+        <h2 className="text-2xl font-bold text-slate-950">下一步建议</h2>
         <p className="mt-4 text-lg leading-8 text-slate-600">{result.practice}</p>
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {nextStepCards.map((card) => (
-            <div key={card.title} className="rounded-3xl bg-slate-50 p-5">
+            <div key={card.title} className="rounded-2xl bg-slate-50 p-5">
               <div className="text-sm font-semibold text-slate-500">{card.title}</div>
               <p className="mt-3 leading-7 text-slate-700">{card.body}</p>
             </div>
           ))}
         </div>
-        <div className="mt-6 rounded-3xl bg-slate-50 p-5">
-          <div className="text-sm font-semibold text-slate-500">通用练习模板</div>
-          <div className="mt-4 grid gap-3 text-slate-700 md:grid-cols-2">
-            <div className="rounded-2xl bg-white p-4 shadow-sm">1. 刚才发生的事实是：______</div>
-            <div className="rounded-2xl bg-white p-4 shadow-sm">2. 我第一时间的解释是：______</div>
-            <div className="rounded-2xl bg-white p-4 shadow-sm">3. 我的情绪强度是：__/10</div>
-            <div className="rounded-2xl bg-white p-4 shadow-sm">4. 除了第一解释，还有一种可能是：______</div>
+      </section>
+
+      <details className="mt-6 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <summary className="cursor-pointer text-xl font-bold text-slate-950">展开完整解读</summary>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="text-lg font-bold text-slate-950">你的优势</h3>
+            <ul className="mt-4 space-y-3 text-slate-600">
+              {result.strengths.map((item) => (
+                <li key={item} className="flex gap-3 leading-7">
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="text-lg font-bold text-slate-950">可能的盲点</h3>
+            <ul className="mt-4 space-y-3 text-slate-600">
+              {result.blindspots.map((item) => (
+                <li key={item} className="flex gap-3 leading-7">
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </section>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600">
+              <Icon name={insights.dominantPain ? "Info" : "ShieldCheck"} className="h-4 w-4" />
+              {dominantSignalTitle}
+            </div>
+            {dominantSignal ? (
+              <>
+                <h3 className="mt-4 text-xl font-bold leading-snug text-slate-950">
+                  {getQuestionDisplayText(dominantSignal.question)}
+                </h3>
+                <div className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
+                  你的选择：{dominantSignal.answerLabel}
+                </div>
+                <p className="mt-5 leading-7 text-slate-600">{dominantSignal.reading.body}</p>
+                <p className="mt-4 text-sm leading-7 text-slate-500">{dominantSignalNote}</p>
+              </>
+            ) : (
+              <p className="mt-4 leading-7 text-slate-600">这次你的回答比较居中，所以没有出现一眼就很突出的高强度题目。</p>
+            )}
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="text-lg font-bold text-slate-950">校准问题</h3>
+            <div className="mt-4 space-y-3">
+              {calibrationPrompts.map((prompt) => (
+                <div key={prompt.title} className="text-sm leading-7 text-slate-700">
+                  <span className="font-semibold text-slate-950">{prompt.title}：</span>
+                  {prompt.body}
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <div className="text-sm font-semibold text-slate-500">可能的自动保护</div>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                {topTrigger?.protectionText || "当我们不舒服时，总会有一些自动保护动作。先看见它们，比立刻改掉它们更重要。"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-slate-50 p-5">
+          <div className="text-sm font-semibold text-slate-500">通用练习模板</div>
+          <div className="mt-4 grid gap-3 text-slate-700 md:grid-cols-2">
+            <div>1. 刚才发生的事实是：______</div>
+            <div>2. 我第一时间的解释是：______</div>
+            <div>3. 我的情绪强度是：__/10</div>
+            <div>4. 除了第一解释，还有一种可能是：______</div>
+          </div>
+        </div>
+      </details>
 
       <section className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 text-sm leading-7 text-amber-900">
         <strong>重要说明：</strong>这个结果不是诊断，也不说明你有某种精神障碍。它只是帮助你理解自己处理反馈、情绪和行动的风格。如果你正在经历长期痛苦、失眠、强烈绝望、无法正常生活，或有自伤/伤人想法，请尽快寻求专业帮助。
